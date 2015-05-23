@@ -1,0 +1,53 @@
+{
+  "name": "frankly-js",
+  "version": "0.1.0",
+  "description": "JavaScript library providing building blocks to write applications using the Frankly API.",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/franklyinc/frankly-js"
+  },
+  "keywords": [
+    "Frankly",
+    "frankly",
+    "Chat",
+    "chat",
+    "franklyinc",
+    "franklychat",
+    "browser",
+    "realtime",
+    "real-time",
+    "platform",
+    "API",
+    "SDK",
+    "api",
+    "sdk"
+  ],
+  "author": "Achille Roussel (achille@franklychat.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/franklyinc/frankly-js/issues"
+  },
+  "homepage": "https://github.com/franklyinc/frankly-js",
+  "dependencies": {
+    "mpack-js": ">=1.2.0",
+    "promise": ">=7.0.1",
+    "ws": ">=0.7.2",
+    "jws": ">=3.0.0"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.3.0",
+    "minifier": ">=0.6.2",
+    "mocha": ">=2.2.5"
+  },
+  "browser": {
+    "ws": "./frankly/websocket.js"
+  }
+}
