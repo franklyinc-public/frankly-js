@@ -26,15 +26,7 @@
 var DEFAULT_CONNECT_TIMEOUT = 5000
 var DEFAULT_REQUEST_TIMEOUT = 5000
 
-var EventEmitter = require('events').EventEmitter
-var Promise      = require('promise')
-var authenticate = require('./authenticate.js')
-var jwt          = require('./jwt.js')
-var model        = require('./model.js')
-var Packet       = require('./packet.js')
-var Socket       = require('./socket.js')
-var RequestStore = require('./requeststore.js')
-var FranklyError = require('./error.js')
+var Connection = require('./connection.js')
 
 /**
  * This class provides the implementation of a network client that exposes
@@ -49,7 +41,7 @@ var FranklyError = require('./error.js')
  * with the same or different pairs of appKey and appSecret.
  *
  * Each instance of FranklyClient maintains its own connection pool to Frankly
- * servers, if the client is not required anymore then the application should 
+ * servers, if the client is not required anymore then the application should
  * call the close method to release system resources.
  *
  * @constructor FranklyClient
@@ -85,192 +77,12 @@ function FranklyClient(address, timeout) {
     throw new Error("timeout parameter must be an object like { connect: ..., request: ... }")
   }
 
-  EventEmitter.call(this)
-  this.pending = new RequestStore()
-  this.address = address
-  this.timeout = timeout
-  this.session = undefined
-  this.socket  = undefined
-  this.timer   = undefined
-  this.running = false
-  this.idseq   = 1
-  this.version = 1
+  Connection.call(this, address, timeout)
 }
 
-FranklyClient.prototype = Object.create(EventEmitter.prototype)
+FranklyClient.prototype = Object.create(Connection.prototype)
 
 FranklyClient.prototype.constructor = FranklyClient
-
-/**
- * This should be the first method called on an instance of FranklyClient. After
- *  succesfully returning, the client can be used to interact with the Frankly API.
- *
- * @param arguments.0
- *
- * @param {function} arguments.0.generateIdentityToken
- *   When a single argument is provided to the method it is expected to be a
- *   callback to a function that would generated an identity token like
- *   {@link frankly.generateIdentityToken}.
- *
- * @param {string} arguments.0.appKey
- *   When two or more arguments are specified the first one is the key that
- *   specifies which app this client is authenticating for, this value is
- *   provided by the Frankly Console.
- *
- * @param arguments.1
- *
- * @param {string} arguments.1.appSecret
- *   The secret value associated the the key allowing the client to securely
- *   authenticate against the Frankly API.
- *
- * @throws {TypeError}
- *   If the type of arguments is invalid.
- *
- * @throws {Error}
- *   If the number of arguments is invalid.
- *
- * @fires FranklyClient#open
- * @fires FranklyClient#authenticate
- * @fires FranklyClient#connect
- * @fires FranklyClient#disconnect
- * @fires FranklyClient#error
- */
-FranklyClient.prototype.open = function () {
-  var generateIdentityToken = undefined
-  var appKey    = undefined
-  var appSecret = undefined
-  var options   = undefined
-  var self      = this
-
-  if (this.running) {
-    throw new Error("open was called multiple times on the same client before it was closed")
-  }
-
-  switch (arguments.length) {
-  case 1:
-    generateIdentityToken = arguments[0]
-
-    if (typeof generateIdentityToken !== 'function') {
-      throw new TypeError("the constructor argument must be a function")
-    }
-
-    break
-
-  case 2:
-    appKey    = arguments[0]
-    appSecret = arguments[1]
-
-    if (typeof appKey !== 'string') {
-      throw new TypeError("the constructor's first argument must be a string")
-    }
-
-    if (typeof appSecret !== 'string') {
-      throw new TypeError("the constructor's second argument must be a string")
-    }
-
-    generateIdentityToken = jwt.identityTokenGenerator(appKey, appSecret)
-    break
-
-  case 3:
-    appKey    = arguments[0]
-    appSecret = arguments[1]
-    options   = arguments[2]
-
-    if (typeof appKey !== 'string') {
-      throw new TypeError("the constructor's first argument must be a string")
-    }
-
-    if (typeof appSecret !== 'string') {
-      throw new TypeError("the constructor's second argument must be a string")
-    }
-
-    generateIdentityToken = jwt.identityTokenGenerator(appKey, appSecret, options)
-    break
-
-  default:
-    throw new Error("invalid argument count for open(function) or open(string, string)")
-  }
-
-  this.running = true
-  this.timer = setInterval(function () { pulse(self) }, 1000)
-
-  /**
-   * Open event, fired when the {@link FranklyClient#open} method is called.
-   *
-   * @event FranklyClient#open
-   * @type {undefined}
-   */
-  this.emit('open')
-  start(this, this.version, generateIdentityToken)
-}
-
-/**
- * Shuts down all connections and releases system resources held by this client
- * object.
- *
- * @fires FranklyClient#close
- */
-FranklyClient.prototype.close = function (hasError) {
-  var exp = undefined
-  var key = undefined
-  var req = undefined
-
-  if (!this.running) {
-    return
-  }
-
-  if (hasError === undefined) {
-    hasError = false
-  }
-
-  clearInterval(this.timer)
-  this.running = false
-  this.session = undefined
-  this.timer   = undefined
-  this.version = this.version + 1
-
-  exp = this.pending.cancel()
-
-  for (key in exp) {
-    req = exp[key]
-    /**
-     * Error event, fired whenever an error is detected on an operation peformed
-     * by the client.
-     *
-     * @event FranklyClient#error
-     * @type {FranklyError}
-     */
-    this.emit('error', new FranklyError(req.operation(), req.packet.path, 500, "the request got canceled"))
-  }
-
-  if (this.socket !== undefined) {
-    try {
-      this.socket.close()
-    } catch (e) {
-      console.log(e)
-    } finally {
-      this.socket = undefined
-    }
-  }
-
-  /**
-   * Close event, fired when the {@link FranklyClient#close} method is called.
-   *
-   * @event FranklyClient#close
-   * @type {boolean}
-   * @property {boolean} hasError
-   *   Set to true if the client was closed due to an error.
-   */
-  this.emit('close', hasError)
-}
-
-FranklyClient.prototype.emit = function () {
-  try {
-    EventEmitter.prototype.emit.apply(this, arguments)
-  } catch (e) {
-    console.log(e)
-  }
-}
 
 /**
  * This method exposes a generic interface for reading objects from the Frankly API.
@@ -292,7 +104,7 @@ FranklyClient.prototype.emit = function () {
  */
 FranklyClient.prototype.read = function (path, params, payload) {
   assertDefined(path)
-  return request(this, 0, path, params, payload)
+  return this.request(0, path, params, payload)
 }
 
 /**
@@ -522,7 +334,7 @@ FranklyClient.prototype.readUser = function (userId) {
  */
 FranklyClient.prototype.create = function (path, params, payload) {
   assertDefined(path)
-  return request(this, 1, path, params, payload)
+  return this.request(1, path, params, payload)
 }
 
 /**
@@ -744,7 +556,7 @@ FranklyClient.prototype.createRoomSubscriber = function (roomId, userId) {
  */
 FranklyClient.prototype.update = function (path, params, payload) {
   assertDefined(path)
-  return request(this, 2, path, params, payload)
+  return this.request(2, path, params, payload)
 }
 
 /**
@@ -816,7 +628,7 @@ FranklyClient.prototype.updateUser = function (userId, options) {
  */
 FranklyClient.prototype.del = function (path, params, payload) {
   assertDefined(path)
-  return request(this, 3, path, params, payload)
+  return this.request(3, path, params, payload)
 }
 
 /**
@@ -938,379 +750,7 @@ FranklyClient.prototype.deleteRoomSubscriber = function (roomId, userId) {
   return this.del('/rooms/' + roomId + '/subscribers/' + userId)
 }
 
-function start(self, version, generateIdentityToken, delay) {
-  if (version !== self.version) {
-    return
-  }
-
-  function success(session) {
-    if (version !== self.version) {
-      return
-    }
-
-    if (self.session !== undefined && self.session.seed !== session.seed) {
-      self.idseq = 1
-    }
-
-    self.session = session
-
-    /**
-     * Authentication event, fired when the client successfully authenticates
-     * against the Frankly API.
-     *
-     * @event FranklyClient#authenticate
-     * @type {object}
-     */
-    self.emit('authenticate', session)
-    connect(self, version, generateIdentityToken)
-  }
-
-  function failure(error) {
-    if (version !== self.version) {
-      return
-    }
-
-    error.operation = 'authenticate'
-    self.emit('error', error)
-
-    switch (error.status) {
-    case 400:
-    case 401:
-    case 403:
-      self.close(true)
-      return
-    }
-
-    if (delay === undefined) {
-      delay = 1000
-    } else {
-      delay = delay + 1000
-    }
-
-    if (delay > 15000) {
-      delay = 15000
-    }
-
-    setTimeout(function () {
-      start(self, version, generateIdentityToken, delay)
-    }, delay)
-  }
-
-  function auth() {
-    if (version !== self.version) {
-      return
-    }
-
-    authenticate(self.address, generateIdentityToken, { timeout: self.timeout.request })
-      .then(success)
-      .catch(failure)
-  }
-
-  function reauth() {
-    var session = self.session
-    var timeout = self.timeout.request
-
-    if (version !== self.version) {
-      return
-    }
-
-    http.get({ host: self.address, path: makeHttpQuery(session, '/auth'), timeout: timeout })
-      .then(function (res) {
-        if (res.statusCode !== 200) {
-          self.session = undefined
-          auth()
-        } else {
-          success(res.content)
-        }
-      })
-      .catch(failure)
-  }
-
-  if (self.session !== undefined) {
-    reauth()
-  } else {
-    auth()
-  }
-}
-
-function connect(self, version, generateIdentityToken) {
-  var session = self.session
-  var ready   = false
-  var socket  = undefined
-
-  if (version !== self.version) {
-    return
-  }
-
-  socket = new Socket(self.address + makeHttpQuery(session, '/'))
-
-  socket.on('open', function () {
-    if (!ready && version === self.version) {
-      ready = true
-      self.socket = socket
-
-      /**
-       * Connection event, fired when the client sucessfully establish a
-       * connection to a Frankly server.
-       *
-       * @event FranklyClient#connect
-       * @type {undefined}
-       */
-      self.emit('connect')
-      self.pending.each(function (req) {
-        var packet = req.packet.clone()
-
-        if (packet.seed === 0) {
-          req.packet.seed = self.session.seed
-        }
-
-        if (packet.seed === self.session.seed) {
-          packet.seed = 0
-        }
-
-        socket.send(packet)
-      })
-    } else {
-      socket.close()
-    }
-  })
-
-  socket.on('close', function (code, reasonse) {
-    if (!ready && version === self.version) {
-      ready = true
-      self.socket = undefined
-
-      /**
-       * Disconnection event, fired when the client gets disconnected from a
-       * Frankly server it had previously established a connection to.
-       *
-       * @event FranklyClient#disconnect
-       * @type {object}
-       *
-       * @property {integer} code
-       *   The code explaining the cause of the disconnection.
-       *
-       * @property {string} reason
-       *   A human-readable explanation of what caused the disconnection.
-       */
-      self.emit('disconnect', { code: code, reason: reason })
-      start(self, version, generateIdentityToken)
-    }
-  })
-
-  socket.on('packet', function (packet) {
-    if (version === self.version) {
-      if (packet.seed === 0) {
-        packet.seed = self.session.seed
-      }
-
-      if (packet.id !== 0) {
-        handleResponse(self, packet)
-      } else {
-        handleSignal(self, packet)
-      }
-    }
-  })
-
-  setTimeout(function() {
-    if (!ready && version === self.version) {
-      ready = true
-      self.emit('error', new FranklyError('connect', '/', 408, "connection timed out"))
-      socket.close()
-      start(self, version, generateIdentityToken)
-    }
-  }, self.timeout.connect)
-}
-
-function request(self, type, path, params, payload) {
-  if (params === undefined) {
-    params = null
-  }
-
-  if (payload === undefined) {
-    payload = null
-  }
-
-  return new Promise(function (resolve, reject) {
-    var seed   = undefined
-    var packet = undefined
-
-    if (!self.running) {
-      reject(new FranklyError(type, path, 400, "submitting request before opening is not allowed"))
-      return
-    }
-
-    if (self.session === undefined) {
-      seed = 0
-    } else {
-      seed = self.session.seed
-    }
-
-    packet = new Packet(
-      type,
-      seed,
-      self.idseq++,
-      splitPath(path),
-      params,
-      payload
-    )
-
-    self.pending.store(packet, Date.now() + self.timeout.request, resolve, function (e) {
-      if (e.status === 401) {
-        if (self.socket !== undefined) {
-          self.socket.close()
-        }
-      }
-      reject(e)
-    })
-
-    if (self.socket !== undefined) {
-      packet = packet.clone()
-      packet.seed = 0
-      self.socket.send(packet)
-    }
-  })
-}
-
-function pulse(self) {
-  var exp = self.pending.timeout(Date.now())
-  var key = undefined
-  var req = undefined
-
-  for (key in exp) {
-    req = exp[key]
-    self.emit('error', new FranklyError(req.operation(), req.packet.path, 408, "the request timed out"))
-  }
-}
-
-function handleResponse(self, packet) {
-  var req  = self.pending.load(packet)
-  var err  = undefined
-  var path = undefined
-  var type = undefined
-  var data = undefined
-
-  if (req !== undefined) {
-    path = req.packet.path
-    type = packet.type
-    data = packet.payload
-
-    switch (type) {
-    case 0:
-      req.resolve(data)
-      data = model.build(path, data)
-
-      if (data === undefined) {
-        return
-      }
-
-      switch (req.packet.type) {
-      case 0:
-        /**
-         * Object fetching event, fired when the client fetches an object through the Frankly API.
-         *
-         * @event FranklyClient#read
-         * @type {object}
-         * @property {string} type
-         *   The event type which represent what kind of data is carried.
-         */
-        self.emit('read', data)
-        break
-
-      case 1:
-        /**
-         * Object creation event, fired when the client creates an object throught the Frankly API.
-         *
-         * @event FranklyClient#create
-         * @type {object}
-         * @property {string} type
-         *   The event type which represent what kind of data is carried.
-         */
-        self.emit('create', data)
-        break
-
-      case 2:
-        /**
-         * Object update event, fired when the client updates an object or when an update is made
-         * by an external action on an object the client is listening (message sends for example).
-         *
-         * @event FranklyClient#update
-         * @type {object}
-         * @property {string} type
-         *   The event type which represent what kind of data is carried.
-         */
-        self.emit('update', data)
-        break
-
-      case 3:
-        /**
-         * Object deletion event, fired when the client deletes an object or when an object is
-         * deleted by an external action (participants leaving a room for example).
-         *
-         * @event FranklyClient#delete
-         * @type {object}
-         * @property {string} type
-         *   The event type which represent what kind of data is carried.
-         */
-        self.emit('delete', data)
-        break
-      }
-
-      return
-
-    case 1:
-      err = new FranklyError(req.operation(), path, data.status, data.error)
-
-    default:
-      err = new FranklyError(req.operation(), path, 500, "the server responded with an invalid packet")
-    }
-
-    req.reject(err)
-    self.emit('error', err)
-  }
-}
-
-function handleSignal(self, packet) {
-  var data = model.build(packet.path, packet.payload)
-
-  if (data !== undefined) {
-    switch (packet.type) {
-    case 2:
-      self.emit('update', data)
-      return
-    case 3:
-      self.emit('delete', data)
-      return
-    }
-  }
-
-  self.emit('signal', packet.type, packet.path, packet.payload)
-}
-
-function makeHttpQuery(session, path) {
-  if (session.token !== undefined) {
-    return path + '?token=' + session.token
-  } else {
-    return '/a/' + session.app_id + '/u/' + session.app_user_id + path + '?xsrf=' + session.xsrf
-  }
-}
-
-function splitPath(path) {
-  var list1 = path.split('/')
-  var list2 = [ ]
-  var value = undefined
-  var index = undefined
-
-  for (index in list1) {
-    value = list1[index]
-
-    if (value.length !== 0) {
-      list2.push(value)
-    }
-  }
-
-  return list2
-}
+module.exports = FranklyClient
 
 function assertDefined(args) {
   var offset = undefined
@@ -1328,4 +768,138 @@ function assertDefined(args) {
   }
 }
 
-module.exports = FranklyClient
+/**
+ * This should be the first method called on an instance of FranklyClient. After
+ * succesfully returning, the client can be used to interact with the Frankly API.
+ *
+ * @method FranklyClient#open
+ *
+ * @param {...object} args
+ *
+ * @param {function} args.generateIdentityToken
+ *   When a single argument is provided to the method it is expected to be a
+ *   callback to a function that would generated an identity token like
+ *   {@link frankly.generateIdentityToken}.
+ *
+ * @param {string} args.appKey
+ *   When two or more arguments are specified the first one is the key that
+ *   specifies which app this client is authenticating for, this value is
+ *   provided by the Frankly Console.
+ *
+ * @param {string} args.appSecret
+ *   The secret value associated the the key allowing the client to securely
+ *   authenticate against the Frankly API.
+ *
+ * @throws {TypeError}
+ *   If the type of arguments is invalid.
+ *
+ * @throws {Error}
+ *   If the number of arguments is invalid.
+ *
+ * @fires FranklyClient#open
+ * @fires FranklyClient#authenticate
+ * @fires FranklyClient#connect
+ * @fires FranklyClient#disconnect
+ * @fires FranklyClient#error
+ */
+
+/**
+ * Shuts down all connections and releases system resources held by this client
+ * object.
+ *
+ * @method FranklyClient#close
+ *
+ * @fires FranklyClient#close
+ */
+
+/**
+ * Open event, fired when the {@link FranklyClient#open} method is called.
+ *
+ * @event FranklyClient#open
+ * @type {undefined}
+ */
+
+/**
+ * Authentication event, fired when the client successfully authenticates
+ * against the Frankly API.
+ *
+ * @event FranklyClient#authenticate
+ * @type {object}
+ */
+
+/**
+ * Connection event, fired when the client sucessfully establish a
+ * connection to a Frankly server.
+ *
+ * @event FranklyClient#connect
+ * @type {undefined}
+ */
+
+/**
+ * Disconnection event, fired when the client gets disconnected from a
+ * Frankly server it had previously established a connection to.
+ *
+ * @event FranklyClient#disconnect
+ * @type {object}
+ *
+ * @property {integer} code
+ *   The code explaining the cause of the disconnection.
+ *
+ * @property {string} reason
+ *   A human-readable explanation of what caused the disconnection.
+ */
+
+/**
+ * Object fetching event, fired when the client fetches an object through the Frankly API.
+ *
+ * @event FranklyClient#read
+ * @type {object}
+ * @property {string} type
+ *   The event type which represent what kind of data is carried.
+ */
+
+/**
+ * Object creation event, fired when the client creates an object throught the Frankly API.
+ *
+ * @event FranklyClient#create
+ * @type {object}
+ * @property {string} type
+ *   The event type which represent what kind of data is carried.
+ */
+
+/**
+ * Object update event, fired when the client updates an object or when an update is made
+ * by an external action on an object the client is listening (message sends for example).
+ *
+ * @event FranklyClient#update
+ * @type {object}
+ * @property {string} type
+ *   The event type which represent what kind of data is carried.
+ */
+
+/**
+ * Object deletion event, fired when the client deletes an object or when an object is
+ * deleted by an external action (participants leaving a room for example).
+ *
+ * @event FranklyClient#delete
+ * @type {object}
+ * @property {string} type
+ *   The event type which represent what kind of data is carried.
+ */
+
+/**
+ * Error event, fired whenever an error is detected on an operation peformed
+ * by the client.
+ *
+ * @event FranklyClient#error
+ * @type {FranklyError}
+ */
+
+/**
+ * Close event, fired when the {@link FranklyClient#close} method is called.
+ *
+ * @event FranklyClient#close
+ * @type {boolean}
+ * @property {boolean} hasError
+ *   Set to true if the client was closed due to an error.
+ */
