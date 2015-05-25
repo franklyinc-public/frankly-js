@@ -160,7 +160,10 @@ Connection.prototype.emit = function () {
 }
 
 Connection.prototype.request = function (type, path, params, payload) {
-  var self = this
+  var packet  = undefined
+  var seed    = undefined
+  var self    = this
+  var timeout = this.timeout.request
 
   if (params === undefined) {
     params = null
@@ -170,40 +173,40 @@ Connection.prototype.request = function (type, path, params, payload) {
     payload = null
   }
 
-  return new Promise(function (resolve, reject) {
-    var seed   = undefined
-    var packet = undefined
+  if (this.session === undefined) {
+    seed = 0
+  } else {
+    seed = this.session.seed
+  }
 
+  packet = new Packet(
+    type,
+    seed,
+    this.idseq++,
+    splitPath(path),
+    params,
+    payload
+  )
+
+  return new Promise(function (resolve, reject) {
     if (!self.running) {
       reject(new FranklyError(type, path, 400, "submitting request before opening is not allowed"))
       return
     }
 
-    if (self.session === undefined) {
-      seed = 0
-    } else {
-      seed = self.session.seed
-    }
-
-    packet = new Packet(
-      type,
-      seed,
-      self.idseq++,
-      splitPath(path),
-      params,
-      payload
-    )
-
-    self.pending.store(packet, Date.now() + self.timeout.request, resolve, function (e) {
-      if (e.status === 401) {
-        if (self.socket !== undefined) {
+    self.pending.store(packet, Date.now() + timeout, resolve, function (e) {
+      if (e.status === 401 && self.version === packet.version && self.socket !== undefined) {
+        try {
           self.socket.close()
+        } catch (e) {
+          console.log(e)
         }
       }
       reject(e)
     })
 
     if (self.socket !== undefined) {
+      packet.version = self.version
       packet = packet.clone()
       packet.seed = 0
       self.socket.send(packet)
@@ -315,7 +318,10 @@ function connect(self, version, generateIdentityToken) {
       self.socket = socket
       self.emit('connect')
       self.pending.each(function (req) {
-        var packet = req.packet.clone()
+        var packet = undefined
+
+        req.packet.version = self.version
+        packet = req.packet.clone()
 
         if (packet.seed === 0) {
           req.packet.seed = self.session.seed
