@@ -266,4 +266,35 @@ describe('frankly.Client', function () {
       admin.open(jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
     })
   })
+
+  describe('user', function () {
+    it('authenticates as a user and updates the display name', function (done) {
+      var admin = new Client(host)
+
+      function success(user) {
+        try {
+          assert.strictEqual(user.display_name, 'Luke Skywalker')
+          done()
+        } catch (e) {
+          failure(e)
+        }
+      }
+
+      function failure(err) {
+        admin.close()
+        done(err)
+      }
+
+      admin.on('authenticate', function (session) {
+        admin.updateUser(session.app_user_id, {
+          display_name: 'Luke Skywalker',
+        })
+          .then(success)
+          .catch(failure)
+      })
+
+      admin.on('error', failure)
+      admin.open(jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
+    })
+  })
 })
