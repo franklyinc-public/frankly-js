@@ -159,6 +159,12 @@ Connection.prototype.emit = function () {
   }
 }
 
+Connection.prototype.nextid = function () {
+  var id = this.idseq
+  this.idseq = id + 1
+  return id
+}
+
 Connection.prototype.request = function (type, path, params, payload) {
   var packet  = undefined
   var seed    = undefined
@@ -182,7 +188,7 @@ Connection.prototype.request = function (type, path, params, payload) {
   packet = new Packet(
     type,
     seed,
-    this.idseq++,
+    this.nextid(),
     splitPath(path),
     params,
     payload
