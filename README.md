@@ -1,4 +1,4 @@
-frankly-js
+Frankly JavaScript SDK
 ==========
 
 Frankly Chat SDK for web browsers and Node.js applications.
