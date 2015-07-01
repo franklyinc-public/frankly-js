@@ -59,7 +59,7 @@ var jws     = require('jws')
  *  The function returns the generated identity token as a string.
  */
 function generateIdentityToken(appKey, appSecret, nonce, options) {
-  var now = Date.now() / 1000
+  var now = Math.floor(Date.now() / 1000)
   var tok = {
     aak: appKey,
     iat: now,
@@ -68,8 +68,8 @@ function generateIdentityToken(appKey, appSecret, nonce, options) {
   }
 
   if (options !== undefined) {
-    if (options.user !== undefined) {
-      tok.uid = options.user
+    if (options.uid !== undefined) {
+      tok.uid = options.uid
     }
 
     if (options.role !== undefined) {

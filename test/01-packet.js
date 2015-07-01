@@ -131,7 +131,7 @@ describe('franly.Packet', function () {
   })
 
   describe('DELETE', function () {
-    it('encodes and decodes an delete packet', function () {
+    it('encodes and decodes a delete packet', function () {
       var packet = new Packet(
         3,
         0,

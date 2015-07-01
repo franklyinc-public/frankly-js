@@ -223,6 +223,11 @@ FranklyClient.prototype.readRoomCount = function (roomId) {
   return this.read('/rooms/' + roomId + '/count')
 }
 
+FranklyClient.prototype.readRoomMessage = function (roomId, messageId) {
+  assertDefined(arguments)
+  return this.read('/rooms/' + roomId + '/messages/' + messageId)
+}
+
 /**
  * Retrieves messages in a room.
  *
@@ -246,10 +251,10 @@ FranklyClient.prototype.readRoomCount = function (roomId) {
  *   means there is no way to retrieve the entire list of messages in a room
  *   (because that could potentially be millions of entries).
  *
- * @param {boolean} options.contextual
- *   When set to true only contextual messages will be returned in the result
+ * @param {boolean} options.sticky
+ *   When set to true only sticky messages will be returned in the result
  *   list.
- *   When set to false only non-contextual messages will be returned in the
+ *   When set to false only non-sticky messages will be returned in the
  *   result list. This argument may be omitted or set to None, in that case any
  *   kind of messages will be returned in the result list.
  *
@@ -295,6 +300,30 @@ FranklyClient.prototype.readRoomSubscriberList = function (roomId) {
   return this.read('/rooms/' + roomId + '/subscribers')
 }
 
+FranklyClient.prototype.readRoomOwnerList = function (roomId) {
+  assertDefined(arguments)
+  return this.read('/rooms/' + roomId + '/owners')
+}
+
+FranklyClient.prototype.readRoomModeratorList = function (roomId) {
+  assertDefined(arguments)
+  return this.read('/rooms/' + roomId + '/moderators')
+}
+
+FranklyClient.prototype.readRoomMemberList = function (roomId) {
+  assertDefined(arguments)
+  return this.read('/rooms/' + roomId + '/members')
+}
+
+FranklyClient.prototype.readRoomVerifiedUserList = function (roomId) {
+  assertDefined(arguments)
+  return this.read('/rooms/' + roomId + '/verifiedusers')
+}
+
+FranklyClient.prototype.readSession = function () {
+  return this.read('/session')
+}
+
 /**
  * Retrieves a user object with id specified as first argument from the app.
  *
@@ -309,6 +338,11 @@ FranklyClient.prototype.readRoomSubscriberList = function (roomId) {
 FranklyClient.prototype.readUser = function (userId) {
   assertDefined(arguments)
   return this.read('/users/' + userId)
+}
+
+FranklyClient.prototype.readUserBan = function (userId) {
+  assertDefined(arguments)
+  return this.read('/users/' + userId + '/ban')
 }
 
 /**
@@ -347,8 +381,8 @@ FranklyClient.prototype.create = function (path, params, payload) {
  *   A list of content objects representing what will be embedded into the messages
  *   once the announcement is published to one or more rooms.
  *
- * @param {boolean} options.contextual
- *   Whether the announcement should be published as a contextual or regular messages.
+ * @param {boolean} options.sticky
+ *   Whether the announcement should be published as a sticky or regular messages.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
@@ -531,6 +565,30 @@ FranklyClient.prototype.createRoomParticipant = function (roomId, userId) {
 FranklyClient.prototype.createRoomSubscriber = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/subscribers/' + userId)
+}
+
+FranklyClient.prototype.createRoomOwner = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.create('/rooms/' + roomId + '/owners/' + userId)
+}
+
+FranklyClient.prototype.createRoomModerator = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.create('/rooms/' + roomId + '/moderators/' + userId)
+}
+
+FranklyClient.prototype.createRoomMember = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.create('/rooms/' + roomId + '/members/' + userId)
+}
+
+FranklyClient.prototype.createRoomVerifiedUser = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.create('/rooms/' + roomId + '/verifiedusers/' + userId)
+}
+
+FranklyClient.prototype.createUser = function (options) {
+  return this.create('/users', undefined, options)
 }
 
 /**
@@ -748,6 +806,35 @@ FranklyClient.prototype.deleteRoomParticipant = function (roomId, userId) {
 FranklyClient.prototype.deleteRoomSubscriber = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/subscribers/' + userId)
+}
+
+FranklyClient.prototype.deleteRoomOwner = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.del('/rooms/' + roomId + '/owners/' + userId)
+}
+
+FranklyClient.prototype.deleteRoomModerator = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.del('/rooms/' + roomId + '/moderators/' + userId)
+}
+
+FranklyClient.prototype.deleteRoomMember = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.del('/rooms/' + roomId + '/members/' + userId)
+}
+
+FranklyClient.prototype.deleteRoomVerifiedUser = function (roomId, userId) {
+  assertDefined(arguments)
+  return this.del('/rooms/' + roomId + '/verifiedusers/' + userId)
+}
+
+FranklyClient.prototype.deleteSession = function () {
+  return this.del('/session')
+}
+
+FranklyClient.prototype.deleteUser = function (userId) {
+  assertDefined(arguments)
+  return this.del('/users/' + userId)
 }
 
 module.exports = FranklyClient

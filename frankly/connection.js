@@ -462,7 +462,7 @@ function makeHttpQuery(session, path) {
   if (session.token !== undefined) {
     return path + '?token=' + session.token
   } else {
-    return '/a/' + session.app_id + '/u/' + session.app_user_id + path + '?xsrf=' + session.xsrf
+    return '/a/' + session.app.id + '/u/' + session.user.id + path + '?xsrf=' + session.xsrf
   }
 }
 

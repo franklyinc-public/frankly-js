@@ -30,22 +30,24 @@ var jwt    = require('../frankly/jwt.js')
 describe('frankly.Authenticate', function () {
   var appKey    = process.env.FRANKLY_APP_KEY
   var appSecret = process.env.FRANKLY_APP_SECRET
-  var host      = process.env.FRANKLY_HOST
+  var appHost   = process.env.FRANKLY_APP_HOST
 
   describe('success', function () {
-    it("sucessfuly authenticates against a Frankly server running at " + host, function (done) {
-      auth(host, jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
+    it("sucessfuly authenticates against a Frankly server running at " + appHost, function (done) {
+      auth(appHost, jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
         .then(function (session) {
-          assert(typeof session.app_user_id !== 'undefined')
-          assert(typeof session.app_id !== 'undefined')
+          assert(typeof session.user.id !== 'undefined')
+          assert(typeof session.app.id !== 'undefined')
           assert(typeof session.token !== 'undefined')
           assert(session.created_on instanceof Date)
           assert(session.updated_on instanceof Date)
           assert(session.expires_on instanceof Date)
           assert.strictEqual(session.platform, 'javascript')
           assert.strictEqual(session.role, 'admin')
-          assert.strictEqual(session.seed, 1)
           assert.strictEqual(session.version, 1)
+          assert.notStrictEqual(session.seed, 0)
+          assert.notStrictEqual(session.seed, null)
+          assert.notStrictEqual(session.seed, undefined)
           done()
         })
         .catch(done)
@@ -53,8 +55,8 @@ describe('frankly.Authenticate', function () {
   })
 
   describe('failure', function () {
-    it("fails to authenticate against a Frankly server running at " + host, function (done) {
-      auth(host, jwt.identityTokenGenerator(appKey, appSecret.split('').reverse().join(''), { role: 'admin' }))
+    it("fails to authenticate against a Frankly server running at " + appHost, function (done) {
+      auth(appHost, jwt.identityTokenGenerator(appKey, appSecret.split('').reverse().join(''), { role: 'admin' }))
         .then(function (session) {
           done(new Error("successful authentication: " + session))
         })

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec jsdoc index.js frankly/client.js frankly/error.js frankly/jwt.js -t ./node_modules/minami/ -d $*

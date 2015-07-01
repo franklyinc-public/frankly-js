@@ -31,11 +31,11 @@ var Client  = require('../frankly/client.js')
 describe('frankly.Client', function () {
   var appKey    = process.env.FRANKLY_APP_KEY
   var appSecret = process.env.FRANKLY_APP_SECRET
-  var host      = process.env.FRANKLY_HOST
+  var appHost   = process.env.FRANKLY_APP_HOST
 
   describe('auth', function () {
-    it("authenticate a client against a Frankly server running at " + host, function (done) {
-      var client  = new Client(host)
+    it("authenticate a client against a Frankly server running at " + appHost, function (done) {
+      var client  = new Client(appHost)
       var auth    = false
       var open    = false
       var connect = false
@@ -70,8 +70,8 @@ describe('frankly.Client', function () {
   })
 
   describe('room', function () {
-    it("create, read, update, delete rooms on Frankly server running at " + host, function (done) {
-      var client = new Client(host)
+    it("create, read, update, delete rooms on Frankly server running at " + appHost, function (done) {
+      var client = new Client(appHost)
 
       client.on('open', function (session) {
         function create(room) {
@@ -142,8 +142,8 @@ describe('frankly.Client', function () {
   })
 
   describe('message', function () {
-    it("create a room a message on Frankly server running at " + host, function (done) {
-      var client = new Client(host)
+    it("create a room a message on Frankly server running at " + appHost, function (done) {
+      var client = new Client(appHost)
 
       client.on('open', function (session) {
         function createRoom(room) {
@@ -206,10 +206,10 @@ describe('frankly.Client', function () {
   })
 
   describe('chat', function () {
-    it("create a room and send messages between two clients on Frankly server at " + host, function (done) {
-      var admin = new Client(host)
-      var user1 = new Client(host)
-      var user2 = new Client(host)
+    it("create a room and send messages between two clients on Frankly server at " + appHost, function (done) {
+      var admin = new Client(appHost)
+      var user1 = new Client(appHost)
+      var user2 = new Client(appHost)
       var count = 0
       var room  = undefined
 
@@ -232,13 +232,13 @@ describe('frankly.Client', function () {
       })
 
       user1.on('authenticate', function (session) {
-        user1.createRoomParticipant(room.id, session.app_user_id)
+        user1.createRoomParticipant(room.id, session.user.id)
           .then(function () {
             user2.open(jwt.identityTokenGenerator(appKey, appSecret, { user: 2 }))
 
             user1.on('update', function (event) {
               try {
-                assert.strictEqual(event.type, 'message')
+                assert.strictEqual(event.type, 'room-message')
                 assert.strictEqual(event.room.id, room.id)
                 assert.strictEqual(event.message.contents.length, 1)
                 assert.strictEqual(event.message.contents[0].type, 'text/plain')
@@ -269,7 +269,7 @@ describe('frankly.Client', function () {
 
   describe('user', function () {
     it('authenticates as a user and updates the display name', function (done) {
-      var admin = new Client(host)
+      var admin = new Client(appHost)
 
       function success(user) {
         try {
@@ -286,7 +286,7 @@ describe('frankly.Client', function () {
       }
 
       admin.on('authenticate', function (session) {
-        admin.updateUser(session.app_user_id, {
+        admin.updateUser(session.user.id, {
           display_name: 'Luke Skywalker',
         })
           .then(success)

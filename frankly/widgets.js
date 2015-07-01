@@ -1,4 +1,4 @@
-/*!
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2015 Frankly Inc.
@@ -23,37 +23,4 @@
  */
 'use strict'
 
-var Promise       = require('promise')
-var FranklyClient = require('./frankly/client.js')
-var FranklyError  = require('./frankly/error.js')
-var jwt           = require('./frankly/jwt.js')
-var parent        = require('./frankly/parent.js')
-var widgets       = require('./frankly/widgets.js')
-var runtime       = require('./frankly/runtime.js')
-
-var index = {
-   FranklyClient         : FranklyClient,
-   FranklyError          : FranklyError,
-   generateIdentityToken : jwt.generateIdentityToken,
-}
-
-var key = undefined
-
-if (runtime.browser) {
-  index.parent = parent
-  index.widgets = widgets
-
-  if (global.frankly === undefined) {
-    global.frankly = { }
-  }
-
-  for (key in index) {
-    global.frankly[key] = index[key]
-  }
-
-  if (global.Promise === undefined) {
-    global.Promise = Promise
-  }
-}
-
-module.exports = index
+module.exports = { }

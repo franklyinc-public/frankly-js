@@ -33,6 +33,21 @@ var matchBuild = [
   { match: ['rooms', '*', 'subscribers', '*'],
     build: buildRoomSubscriber },
 
+  { match: ['rooms', '*', 'owners', '*'],
+    build: buildRoomOwner },
+
+  { match: ['rooms', '*', 'moderators', '*'],
+    build: buildRoomModerator },
+
+  { match: ['rooms', '*', 'members', '*'],
+    build: buildRoomMember },
+
+  { match: ['rooms', '*', 'verifiedusers', '*'],
+    build: buildRoomVerifiedUser },
+
+  { match: ['rooms', '*', 'count'],
+    build: buildRoomCount },
+
   { match: ['rooms', '*'],
     build: buildRoom },
 
@@ -89,51 +104,127 @@ function match(path, refp) {
 }
 
 function buildApp(path, payload) {
-  return { type: 'app', app: payload }
+  return {
+    type: 'app',
+    app:  payload,
+  }
 }
 
 function buildRoom(path, payload) {
-  return { type: 'room', room: payload }
+  return {
+    type: 'room',
+    room: payload,
+  }
 }
 
 function buildRoomMessage(path, payload) {
   return {
-    type:    'message',
+    type:    'room-message',
     room:    { id: parseInt(path[1]) },
     message: payload,
   }
 }
 
-function buildRoomParticipant(path, payload) {
+function buildRoomCount(path, payload) {
   return {
-    type: 'participant',
+    type:  'room-count',
+    room:  { id: parseInt(path[1]) },
+    count: payload,
+  }
+}
+
+function buildRoomParticipant(path, payload) {
+  if (!payload) {
+    payload = { id: parseInt(path[3]) }
+  }
+
+  return {
+    type: 'room-participant',
     room: { id: parseInt(path[1]) },
     user: payload,
   }
 }
 
 function buildRoomSubscriber(path, payload) {
+  if (!payload) {
+    payload = { id: parseInt(path[3]) }
+  }
+
   return {
-    type: 'subscriber',
+    type: 'room-subscriber',
+    room: { id: parseInt(path[1]) },
+    user: payload,
+  }
+}
+
+function buildRoomOwner(path, payload) {
+  if (!payload) {
+    payload = { id: parseInt(path[3]) }
+  }
+
+  return {
+    type: 'room-owner',
+    room: { id: parseInt(path[1]) },
+    user: payload,
+  }
+}
+
+function buildRoomModerator(path, payload) {
+  if (!payload) {
+    payload = { id: parseInt(path[3]) }
+  }
+
+  return {
+    type: 'room-moderator',
+    room: { id: parseInt(path[1]) },
+    user: payload,
+  }
+}
+
+function buildRoomMember(path, payload) {
+  if (!payload) {
+    payload = { id: parseInt(path[3]) }
+  }
+
+  return {
+    type: 'room-member',
+    room: { id: parseInt(path[1]) },
+    user: payload,
+  }
+}
+
+function buildRoomVerifiedUser(path, payload) {
+  if (!payload) {
+    payload = { id: parseInt(path[3]) }
+  }
+
+  return {
+    type: 'room-verified-user',
     room: { id: parseInt(path[1]) },
     user: payload,
   }
 }
 
 function buildUser(path, payload) {
-  return { type: 'user', user: payload }
+  return {
+    type: 'user',
+    user: payload,
+  }
 }
 
 function buildUserBan(path, payload) {
   return {
-    type: 'ban',
+    type: 'user-ban',
     user: { id: parseInt(path[1]) },
     ban:  payload,
   }
 }
 
 function buildSession(path, payload) {
-  return { type: 'session', session: payload }
+  return {
+    type:    'session',
+    session: payload,
+  }
 }
 
 module.exports = {
