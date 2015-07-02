@@ -431,9 +431,11 @@ function handleResponse(self, packet) {
 
     case 1:
       err = new FranklyError(req.operation(), path, data.status, data.error)
+      break
 
     default:
-      err = new FranklyError(req.operation(), path, 500, "the server responded with an invalid packet")
+      err = new FranklyError(req.operation(), path, 500, "the server responded with an invalid packet type [" + type + "]")
+      break
     }
 
     req.reject(err)

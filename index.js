@@ -32,9 +32,10 @@ var widgets       = require('./frankly/widgets.js')
 var runtime       = require('./frankly/runtime.js')
 
 var index = {
-   FranklyClient         : FranklyClient,
-   FranklyError          : FranklyError,
-   generateIdentityToken : jwt.generateIdentityToken,
+  FranklyClient          : FranklyClient,
+  FranklyError           : FranklyError,
+  generateIdentityToken  : jwt.generateIdentityToken,
+  identityTokenGenerator : jwt.identityTokenGenerator,
 }
 
 var key = undefined

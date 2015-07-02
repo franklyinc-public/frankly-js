@@ -26,29 +26,10 @@
 var FranklyError = require('./error.js')
 
 function Request(packet, expire, resolve, reject) {
-  this.packet   = packet
-  this.expire   = expire
-  this.resolver = resolve
-  this.rejecter = reject
-}
-
-Request.prototype.complete = function (packet) {
-  var type = this.packet.type
-  var path = this.packet.path
-
-  switch (packet.type) {
-  case 0:
-    this.resolve(packet.payload)
-    break
-
-  case 1:
-    this.reject(new FranklyError(operation(type), path, packet.payload.status, packet.payload.error))
-    break
-
-  default:
-    this.reject(new FranklyError(operation(type), path, 500, "the server responded with an invalid packet"))
-    break
-  }
+  this.packet  = packet
+  this.expire  = expire
+  this.resolve = resolve
+  this.reject  = reject
 }
 
 Request.prototype.timeout = function () {
@@ -65,22 +46,6 @@ Request.prototype.cancel = function () {
 
 Request.prototype.operation = function () {
   return operation(this.packet.type)
-}
-
-Request.prototype.resolve = function (x) {
-  try {
-    this.resolver(x)
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-Request.prototype.reject = function (x) {
-  try {
-    this.rejecter(x)
-  } catch (e) {
-    console.log(e)
-  }
 }
 
 function operation(type) {

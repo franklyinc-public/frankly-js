@@ -45,18 +45,6 @@ RequestStore.prototype.load = function (packet) {
   return req
 }
 
-RequestStore.prototype.complete = function (packet) {
-  var req = this.load(packet)
-
-  if (req !== undefined) {
-    try {
-      req.complete(packet)
-    } catch (e) {
-      console.log(e)
-    }
-  }
-}
-
 RequestStore.prototype.timeout = function (now) {
   var key = undefined
   var req = undefined

@@ -88,6 +88,35 @@ function generateIdentityToken(appKey, appSecret, nonce, options) {
   })
 }
 
+/**
+ * This function returns a callable object that accepts a nonce value as single
+ * argument and returns an identity token generated for the <em>appKey</em>,
+ * <em>appSecret</em> and <em>options</em>.
+ *
+ * @param {string} appKey
+ *   The key that specifies which app this client is authenticating for, this value
+ *   is provided by the Frankly Console.
+ *
+ * @param {string} appSecret
+ *   The secret value associated the the key allowing the client to securely
+ *   authenticate against the Frankly API.
+ *
+ * @param {object} options
+ *  Optional object containing extra information about the authentication process.
+ *
+ * @param {string} options.uid
+ *  This argument must be set to make the SDK operate on behalf of a specific user
+ *  of the app.
+ *  For backend services willing to interact with the API directly this may be omitted.
+ *
+ * @param {string} options.role
+ *  For backend services using the Frankly API this can be set to 'admin' to
+ *  generate a token allowing the client to get admin priviledges and perform
+ *  operations that regular users are forbidden to.
+ *
+ * @return {function}
+ *  A function that generates identity tokens.
+ */
 function identityTokenGenerator(appKey, appSecret, options) {
   return function (nonce) {
     return new Promise(function (resolve, reject) {
