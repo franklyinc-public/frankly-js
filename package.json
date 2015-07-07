@@ -44,17 +44,19 @@
     "jsdoc": "^3.3.0",
     "minami": "^1.1.0",
     "mocha": ">=2.2.5",
+    "s3": "^4.4.0",
     "uglify-js": "^2.4.23"
   },
   "scripts": {
-    "browserify": "browserify index.js --outfile dist/frankly-js.js",
-    "minify": "uglifyjs dist/frankly-js.js --compress --mangle --output dist/frankly-js.min.js --source-map dist/frankly-js.min.js.map",
-    "frankly-help": "npm run frankly-instructions -s",
-    "frankly-instructions": "printf '\n\nTo build script run npm run build\nTo deploy script run npm run deploy\n\n\n'",
-    "test": "mocha",
-    "build": "npm run browserify && npm run minify",
-    "build:loud": "printf 'Browserify-ing...\n' && npm run browserify && printf 'Minify-ing...\n' && npm run minify",
-    "deploy": "npm run build && #do-something-to-upload... $npm_package_config_host $npm_package_config_key $npm_package_config_secret "
+    "browserify": "browserify index.js --outfile dist/frankly.js",
+    "build": "printf 'Browserify-ing...\n' && npm run browserify && printf 'Minify-ing...\n' && npm run minify",
+    "deploy": "npm run build -s && npm run frankly-version | node scripts/s3-upload.js",
+    "env": "env",
+    "frankly-version": "npm run env | grep 'npm_package_version=' | grep -o '\\d\\+.\\d\\+.\\d\\+'",
+    "minify": "uglifyjs dist/frankly.js --compress --mangle --output dist/frankly.min.js --source-map dist/frankly.js.map -p 1 --source-map-url https://s3.amazonaws.com/frankly-js/$(npm run frankly-version)/frankly.js.map",
+    "s3-upload": "node scripts/s3-upload.js",
+    "test": "mocha --timeout 10000",
+    "test-build-deploy": "node scripts/test-build-deploy.js"
   },
   "browser": {
     "./frankly/parent.js": "./frankly/browser/parent.js",

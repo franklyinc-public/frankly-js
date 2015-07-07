@@ -86,7 +86,7 @@ function request(options, data) {
   }
 
   return new Promise(function (resolve, reject) {
-    var req = http.request(options)
+    var req = request(options)
 
     if (options.timeout !== undefined) {
       // http-browserify doesn't support this method yet:
@@ -137,24 +137,24 @@ function request(options, data) {
 }
 
 module.exports = {
-  'request': request,
+  request: request,
 
-  'del': function (options) {
+  del: function (options) {
     options.method = 'DELETE'
     return request(options)
   },
 
-  'get': function (options) {
+  get: function (options) {
     options.method = 'GET'
     return request(options)
   },
 
-  'post': function (options, data) {
+  post: function (options, data) {
     options.method = 'POST'
     return request(options, data)
   },
 
-  'put': function (options, data) {
+  put: function (options, data) {
     options.method = 'PUT'
     return request(options, data)
   },

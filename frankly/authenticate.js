@@ -67,6 +67,7 @@ function authenticate(address, generateIdentityToken, options) {
     options.timeout = 5000
   }
 
+  options.protocol = address.protocol
   options.host = address.hostname
   options.port = address.port
 
