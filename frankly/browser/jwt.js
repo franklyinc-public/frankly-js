@@ -1,4 +1,4 @@
-/*
+/*!
  * The MIT License (MIT)
  *
  * Copyright (c) 2015 Frankly Inc.
@@ -24,7 +24,11 @@
 'use strict'
 
 module.exports = {
-  init: function () {
-    throw new Error("this function is not implemented for Node.js")
+  generateIdentityToken: function () {
+    throw new Error("this function is not implemented for web browsers")
+  },
+
+  identityTokenGenerator: function () {
+    throw new Error("this function is not implemented for web browsers")
   },
 }

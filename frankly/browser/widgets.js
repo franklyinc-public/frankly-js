@@ -39,7 +39,7 @@ var methods = {
         configs.push({
           ready: false,
           window: source,
-          __pendingWindows: [
+          pending: [
             function (config) {
               resolve(cleanConfig(config))
             },
@@ -47,7 +47,7 @@ var methods = {
         })
         return
       } else if (!config.ready) {
-        config.__pendingWindows.push(function (config) {
+        config.pending.push(function (config) {
           resolve(cleanConfig(config))
         })
         return
@@ -133,7 +133,7 @@ function copyConfig(config) {
     if (typeof val === 'object') {
       throw new TypeError("unexpected object in configuration")
     }
-    
+
     cfg[key] = val
   }
 
@@ -171,7 +171,7 @@ function cleanConfig(config) {
 }
 
 function notifyConfigReady(config) {
-  var pending = config.__pendingWindows
+  var pending = config.pending
   var key = undefined
 
   if (pending !== undefined) {

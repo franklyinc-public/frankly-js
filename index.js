@@ -36,14 +36,14 @@ var index = {
   FranklyError           : FranklyError,
   generateIdentityToken  : jwt.generateIdentityToken,
   identityTokenGenerator : jwt.identityTokenGenerator,
+  parent                 : parent,
+  widgets                : widgets,
+  runtime                : runtime,
 }
 
 var key = undefined
 
 if (runtime.browser) {
-  index.parent = parent
-  index.widgets = widgets
-
   if (global.frankly === undefined) {
     global.frankly = { }
   }

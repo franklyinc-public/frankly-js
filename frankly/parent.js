@@ -23,4 +23,12 @@
  */
 'use strict'
 
-module.exports = { }
+module.exports = {
+  init: function () {
+    throw new Error("this function is not implemented for Node.js")
+  },
+
+  request: function () {
+    throw new Error("this function is not implemmented for Node.js")
+  },
+}

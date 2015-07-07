@@ -43,11 +43,16 @@ function operation(method) {
 }
 
 function request(options, data) {
-  var request = http.request
+  var request = undefined
   var encoder = undefined
 
   switch (options.protocol) {
   case undefined:
+    request = http.request
+    break
+
+  case 'http:':
+    request = http.request
     break
 
   case 'https:':
