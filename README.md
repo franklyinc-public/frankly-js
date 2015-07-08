@@ -41,7 +41,7 @@ Usage (Browsers)
 The code is also published online and can be embeded directly into a web page:
 
 ```html
-<script src="https://cdn.franklychat.com/frankly-js/{version}/frankly.min.js"></script>
+<script src="https://cdn.franklychat.com/frankly-js/0/frankly.min.js"></script>
 <script>
   var client = new frankly.FranklyClient()
 
