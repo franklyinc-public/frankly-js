@@ -23,7 +23,7 @@
  */
 'use strict'
 
-var FranklyError = require('./error.js')
+var Error = require('./error.js')
 
 function Request(packet, expire, resolve, reject) {
   this.packet  = packet
@@ -35,13 +35,13 @@ function Request(packet, expire, resolve, reject) {
 Request.prototype.timeout = function () {
   var type = this.packet.type
   var path = this.packet.path
-  this.reject(new FranklyError(operation(type), path, 408, "the request timed out"))
+  this.reject(Error.make(operation(type), path, 408, "the request timed out"))
 }
 
 Request.prototype.cancel = function () {
   var type = this.packet.type
   var path = this.packet.path
-  this.reject(new FranklyError(operation(type), path, 500, "the request got canceled"))
+  this.reject(Error.make(operation(type), path, 500, "the request got canceled"))
 }
 
 Request.prototype.operation = function () {

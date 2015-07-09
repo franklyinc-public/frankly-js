@@ -23,13 +23,14 @@
  */
 'use strict'
 
-var http         = require('http')
-var https        = require('https')
-var Promise      = require('promise')
-var UserAgent    = require('./useragent.js')
-var FranklyError = require('./error.js')
-var normalize    = require('./normalize.js')
-var denormalize  = require('./denormalize.js')
+var http        = require('http')
+var https       = require('https')
+var Promise     = require('promise')
+var Cookie      = require('./cookie.js')
+var UserAgent   = require('./useragent.js')
+var Error       = require('./error.js')
+var normalize   = require('./normalize.js')
+var denormalize = require('./denormalize.js')
 
 function operation(method) {
   switch (method) {
@@ -45,6 +46,8 @@ function operation(method) {
 function request(options, data) {
   var request = undefined
   var encoder = undefined
+  var cookies = undefined
+  var index   = undefined
 
   switch (options.protocol) {
   case undefined:
@@ -75,19 +78,23 @@ function request(options, data) {
     options.headers['accept'] = 'application/json'
   }
 
-  if (options.headers['content-type'] === undefined) {
-    options.headers['content-type'] = 'application/json'
-    encoder = JSON.stringify
+  if (options.cookies !== undefined) {
+    cookies = [ ]
+
+    for (index in options.cookies) {
+      cookies.push(Cookie.format(options.cookies[index]))
+    }
+
+    options.headers['cookie'] = cookies
   }
 
   if (data === undefined) {
     data = ''
     options.headers['content-length'] = 0
   } else {
-    if (encoder !== undefined) {
-      data = encoder(denormalize(data))
-    }
+    data = JSON.stringify(denormalize(data))
     options.headers['content-length'] = data.length
+    options.headers['content-type'] = 'application/json'
   }
 
   return new Promise(function (resolve, reject) {
@@ -106,6 +113,14 @@ function request(options, data) {
 
     req.on('response', function (res) {
       var content = undefined
+      var cookies = res.headers['set-cookie']
+
+      if (cookies === undefined) {
+        cookies = [ ]
+      }
+
+      delete res.headers['set-cookie']
+      res.cookies = Cookie.parse(cookies)
 
       res.on('data', function (chunk) {
         if (content === undefined) {
@@ -120,20 +135,26 @@ function request(options, data) {
           if (content !== undefined && res.headers['content-type'] === 'application/json') {
             content = normalize(JSON.parse(content))
           }
+        } catch (e) {
+          reject(Error.make(operation(options.method), options.path, 500, e.message))
+          return
+        }
+
+        if ((res.statusCode >= 200) && (res.statusCode < 300)) {
           res.content = content
           resolve(res)
-        } catch (e) {
-          reject(new FranklyError(operation(options.method), options.path, 500, e.message))
+        } else {
+          reject(Error.make(operation(options.method), options.path, res.statusCode, content))
         }
       })
     })
 
     req.on('error', function (e) {
-      reject(new FranklyError(operation(options.method), options.path, 500, e.message))
+      reject(Error.make(operation(options.method), options.path, 500, e.message))
     })
 
     req.on('timeout', function () {
-      reject(new FranklyError(operation(options.method), options.path, 408, "request timed out"))
+      reject(Error.make(operation(options.method), options.path, 408, "request timed out"))
     })
 
     req.write(data)

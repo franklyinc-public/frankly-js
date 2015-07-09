@@ -23,16 +23,13 @@
  */
 'use strict'
 
-var DEFAULT_CONNECT_TIMEOUT = 5000
-var DEFAULT_REQUEST_TIMEOUT = 5000
-
 var Connection = require('./connection.js')
 
 /**
  * This class provides the implementation of a network client that exposes
  * operations available on the Frankly API to a python application.
  *
- * A typical work flow is to create an instance of FranklyClient, using it to
+ * A typical work flow is to create an instance of Client, using it to
  * authenticate and then make method calls to interact with the API.
  * Reusing the same client instance multiple times allows the application to avoid
  * wasting time re-authenticating before every operation.
@@ -40,19 +37,20 @@ var Connection = require('./connection.js')
  * An application can create multiple instances of this class and authenticate
  * with the same or different pairs of appKey and appSecret.
  *
- * Each instance of FranklyClient maintains its own connection pool to Frankly
+ * Each instance of Client maintains its own connection pool to Frankly
  * servers, if the client is not required anymore then the application should
  * call the close method to release system resources.
  *
- * @constructor FranklyClient
+ * @constructor Client
  */
-function FranklyClient(address, timeout) {
+function Client(address, timeout) {
   switch (typeof address) {
   case 'undefined':
     address = 'https://app.franklychat.com'
     break
 
   case 'string':
+    address = makeAddress(address)
     break
 
   default:
@@ -61,15 +59,15 @@ function FranklyClient(address, timeout) {
 
   switch (typeof timeout) {
   case 'undefined':
-    timeout = { connect: DEFAULT_CONNECT_TIMEOUT, request: DEFAULT_REQUEST_TIMEOUT }
+    timeout = { connect: 5000, request: 5000 }
     break
 
   case 'object':
     if (timeout.connect === undefined) {
-      timeout.connect = DEFAULT_CONNECT_TIMEOUT
+      timeout.connect = 5000
     }
     if (timeout.request === undefined) {
-      timeout.request = DEFAULT_REQUEST_TIMEOUT
+      timeout.request = 5000
     }
     break
 
@@ -80,9 +78,34 @@ function FranklyClient(address, timeout) {
   Connection.call(this, address, timeout)
 }
 
-FranklyClient.prototype = Object.create(Connection.prototype)
+function makeAddress(address) {
+  switch (address) {
+  case 'https' : return 'https://app.franklychat.com'
+  case 'wss'   : return 'wss://app.franklychat.com'
+  }
 
-FranklyClient.prototype.constructor = FranklyClient
+  if (address.indexOf('https:') === 0) {
+    return address
+  }
+
+  if (address.indexOf('wss:') === 0) {
+    return address
+  }
+
+  if (address.indexOf('http:') === 0) {
+    return address
+  }
+
+  if (address.indexOf('ws:') === 0) {
+    return address
+  }
+
+  throw new Error("the given address doesn't tell what protocol to use: " + address)
+}
+
+Client.prototype = Object.create(Connection.prototype)
+
+Client.prototype.constructor = Client
 
 /**
  * This method exposes a generic interface for reading objects from the Frankly API.
@@ -100,9 +123,9 @@ FranklyClient.prototype.constructor = FranklyClient
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched data or the reject callback will be called
- *   with an instance of {@link FranklyError}.
+ *   with an instance of {Error}.
  */
-FranklyClient.prototype.read = function (path, params, payload) {
+Client.prototype.read = function (path, params, payload) {
   assertDefined(path)
   return this.request(0, path, params, payload)
 }
@@ -117,9 +140,9 @@ FranklyClient.prototype.read = function (path, params, payload) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched announcement or the reject callback will
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readAnnouncement = function (announcementId) {
+Client.prototype.readAnnouncement = function (announcementId) {
   assertDefined(arguments)
   return this.read('/announcements/' + announcementId)
 }
@@ -130,9 +153,9 @@ FranklyClient.prototype.readAnnouncement = function (announcementId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched announcement list or the reject callback
- *   will be called with an instance of {@link FranklyError}.
+ *   will be called with an instance of {Error}.
  */
-FranklyClient.prototype.readAnnouncementList = function () {
+Client.prototype.readAnnouncementList = function () {
   assertDefined(arguments)
   return this.read('/announcements')
 }
@@ -146,9 +169,9 @@ FranklyClient.prototype.readAnnouncementList = function () {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched room list or the reject callback will
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readAnnouncementRoomList = function (announcementId) {
+Client.prototype.readAnnouncementRoomList = function (announcementId) {
   assertDefined(arguments)
   return this.read('/announcements/' + annoucementId + '/rooms')
 }
@@ -162,9 +185,9 @@ FranklyClient.prototype.readAnnouncementRoomList = function (announcementId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fectched app or the reject callback while be
- *   called with an instance of {@link FranklyError}.
+ *   called with an instance of {Error}.
  */
-FranklyClient.prototype.readApp = function (appId) {
+Client.prototype.readApp = function (appId) {
   assertDefined(arguments)
   return this.read('/apps/' + appId)
 }
@@ -178,9 +201,9 @@ FranklyClient.prototype.readApp = function (appId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched room or the reject callback will be
- *   called with an instance of {@link FranklyError}.
+ *   called with an instance of {Error}.
  */
-FranklyClient.prototype.readRoom = function (roomId) {
+Client.prototype.readRoom = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId)
 }
@@ -191,9 +214,9 @@ FranklyClient.prototype.readRoom = function (roomId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched room list or the reject callback will
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readRoomList = function () {
+Client.prototype.readRoomList = function () {
   assertDefined(arguments)
   return this.read('/rooms')
 }
@@ -216,14 +239,14 @@ FranklyClient.prototype.readRoomList = function () {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fectched counters or the reject callback while
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readRoomCount = function (roomId) {
+Client.prototype.readRoomCount = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/count')
 }
 
-FranklyClient.prototype.readRoomMessage = function (roomId, messageId) {
+Client.prototype.readRoomMessage = function (roomId, messageId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/messages/' + messageId)
 }
@@ -261,9 +284,9 @@ FranklyClient.prototype.readRoomMessage = function (roomId, messageId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fetched room list or the reject callback will
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readRoomMessageList = function (roomId, options) {
+Client.prototype.readRoomMessageList = function (roomId, options) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/messages', options)
 }
@@ -277,9 +300,9 @@ FranklyClient.prototype.readRoomMessageList = function (roomId, options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fectched user list or the reject callback while
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readRoomParticipantList = function (roomId) {
+Client.prototype.readRoomParticipantList = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/participants')
 }
@@ -293,34 +316,34 @@ FranklyClient.prototype.readRoomParticipantList = function (roomId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fectched user list or the reject callback while
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readRoomSubscriberList = function (roomId) {
+Client.prototype.readRoomSubscriberList = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/subscribers')
 }
 
-FranklyClient.prototype.readRoomOwnerList = function (roomId) {
+Client.prototype.readRoomOwnerList = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/owners')
 }
 
-FranklyClient.prototype.readRoomModeratorList = function (roomId) {
+Client.prototype.readRoomModeratorList = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/moderators')
 }
 
-FranklyClient.prototype.readRoomMemberList = function (roomId) {
+Client.prototype.readRoomMemberList = function (roomId) {
   assertDefined(arguments)
   return this.read('/rooms/' + roomId + '/members')
 }
 
-FranklyClient.prototype.readRoomVerifiedUserList = function (roomId) {
+Client.prototype.readRoomAnnouncerList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/verifiedusers')
+  return this.read('/rooms/' + roomId + '/announcers')
 }
 
-FranklyClient.prototype.readSession = function () {
+Client.prototype.readSession = function () {
   return this.read('/session')
 }
 
@@ -333,14 +356,14 @@ FranklyClient.prototype.readSession = function () {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the fectched user or the reject callback while
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  */
-FranklyClient.prototype.readUser = function (userId) {
+Client.prototype.readUser = function (userId) {
   assertDefined(arguments)
   return this.read('/users/' + userId)
 }
 
-FranklyClient.prototype.readUserBan = function (userId) {
+Client.prototype.readUserBan = function (userId) {
   assertDefined(arguments)
   return this.read('/users/' + userId + '/ban')
 }
@@ -361,12 +384,12 @@ FranklyClient.prototype.readUserBan = function (userId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the newly created data or the reject callback will
- *   be called with an instance of {@link FranklyError}.
+ *   be called with an instance of {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.create = function (path, params, payload) {
+Client.prototype.create = function (path, params, payload) {
   assertDefined(path)
   return this.request(1, path, params, payload)
 }
@@ -387,12 +410,12 @@ FranklyClient.prototype.create = function (path, params, payload) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the newly created announcement or the reject callback
- *   will be called with an instance of {@link FranklyError}.
+ *   will be called with an instance of {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createAnnouncement = function (options) {
+Client.prototype.createAnnouncement = function (options) {
   assertDefined(arguments)
   return this.create('/announcements', undefined, options)
 }
@@ -428,12 +451,12 @@ FranklyClient.prototype.createAnnouncement = function (options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the newly created room or the reject callback
- *   will be called with an instance of {@link FranklyError}.
+ *   will be called with an instance of {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createRoom = function (options) {
+Client.prototype.createRoom = function (options) {
   assertDefined(arguments)
   return this.create('/rooms', undefined, options)
 }
@@ -456,12 +479,12 @@ FranklyClient.prototype.createRoom = function (options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the newly created message or the reject callback
- *   will be called with an instance of {@link FranklyError}.
+ *   will be called with an instance of {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createRoomMessage = function (roomId, options) {
+Client.prototype.createRoomMessage = function (roomId, options) {
   var params = undefined
 
   assertDefined(arguments)
@@ -486,12 +509,12 @@ FranklyClient.prototype.createRoomMessage = function (roomId, options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createRoomMessageFlag = function (roomId, messageId) {
+Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/messages/' + messageId + '/flag')
 }
@@ -511,12 +534,12 @@ FranklyClient.prototype.createRoomMessageFlag = function (roomId, messageId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createRoomListener = function (roomId, userId) {
+Client.prototype.createRoomListener = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/listeners/' + userId)
 }
@@ -534,12 +557,12 @@ FranklyClient.prototype.createRoomListener = function (roomId, userId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createRoomParticipant = function (roomId, userId) {
+Client.prototype.createRoomParticipant = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/participants/' + userId)
 }
@@ -557,37 +580,37 @@ FranklyClient.prototype.createRoomParticipant = function (roomId, userId) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   {Error}.
  *
- * @fires FranklyClient#create
- * @fires FranklyClient#error
+ * @fires Client#create
+ * @fires Client#error
  */
-FranklyClient.prototype.createRoomSubscriber = function (roomId, userId) {
+Client.prototype.createRoomSubscriber = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/subscribers/' + userId)
 }
 
-FranklyClient.prototype.createRoomOwner = function (roomId, userId) {
+Client.prototype.createRoomOwner = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/owners/' + userId)
 }
 
-FranklyClient.prototype.createRoomModerator = function (roomId, userId) {
+Client.prototype.createRoomModerator = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/moderators/' + userId)
 }
 
-FranklyClient.prototype.createRoomMember = function (roomId, userId) {
+Client.prototype.createRoomMember = function (roomId, userId) {
   assertDefined(arguments)
   return this.create('/rooms/' + roomId + '/members/' + userId)
 }
 
-FranklyClient.prototype.createRoomVerifiedUser = function (roomId, userId) {
+Client.prototype.createRoomAnnouncer = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/verifiedusers/' + userId)
+  return this.create('/rooms/' + roomId + '/announcers/' + userId)
 }
 
-FranklyClient.prototype.createUser = function (options) {
+Client.prototype.createUser = function (options) {
   return this.create('/users', undefined, options)
 }
 
@@ -607,12 +630,12 @@ FranklyClient.prototype.createUser = function (options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the returned data or the reject callback will be called
- *   with an instance of {@link FranklyError}.
+ *   with an instance of {Error}.
  *
- * @fires FranklyClient#update
- * @fires FranklyClient#error
+ * @fires Client#update
+ * @fires Client#error
  */
-FranklyClient.prototype.update = function (path, params, payload) {
+Client.prototype.update = function (path, params, payload) {
   assertDefined(path)
   return this.request(2, path, params, payload)
 }
@@ -630,12 +653,12 @@ FranklyClient.prototype.update = function (path, params, payload) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the updated room or the reject callback will be called
- *   with an instance of {@link FranklyError}.
+ *   with an instance of {Error}.
  *
- * @fires FranklyClient#update
- * @fires FranklyClient#error
+ * @fires Client#update
+ * @fires Client#error
  */
-FranklyClient.prototype.updateRoom = function (roomId, options) {
+Client.prototype.updateRoom = function (roomId, options) {
   assertDefined(arguments)
   return this.update('/rooms/' + roomId, undefined, options)
 }
@@ -653,12 +676,12 @@ FranklyClient.prototype.updateRoom = function (roomId, options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the updated user or the reject callback will be called
- *   with an instance of {@link FranklyError}.
+ *   with an instance of {Error}.
  *
- * @fires FranklyClient#update
- * @fires FranklyClient#error
+ * @fires Client#update
+ * @fires Client#error
  */
-FranklyClient.prototype.updateUser = function (userId, options) {
+Client.prototype.updateUser = function (userId, options) {
   assertDefined(arguments)
   return this.update('/users/' + userId, undefined, options)
 }
@@ -679,12 +702,12 @@ FranklyClient.prototype.updateUser = function (userId, options) {
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
  *   object representing the returned data or the reject callback will be called
- *   with an instance of {@link FranklyError}.
+ *   with an instance of {Error}.
  *
- * @fires FranklyClient#delete
- * @fires FranklyClient#error
+ * @fires Client#delete
+ * @fires Client#error
  */
-FranklyClient.prototype.del = function (path, params, payload) {
+Client.prototype.del = function (path, params, payload) {
   assertDefined(path)
   return this.request(3, path, params, payload)
 }
@@ -704,13 +727,12 @@ FranklyClient.prototype.del = function (path, params, payload) {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
- *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires FranklyClient#delete
- * @fires FranklyClient#error
+ * @fires Client#delete
+ * @fires Client#error
  */
-FranklyClient.prototype.deleteAnnouncement = function (announcementId) {
+Client.prototype.deleteAnnouncement = function (announcementId) {
   assertDefined(arguments)
   return this.del('/announcements/' + announcementId)
 }
@@ -731,13 +753,12 @@ FranklyClient.prototype.deleteAnnouncement = function (announcementId) {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
- *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires FranklyClient#delete
- * @fires FranklyClient#error
+ * @fires Client#delete
+ * @fires Client#error
  */
-FranklyClient.prototype.deleteRoom = function (roomId) {
+Client.prototype.deleteRoom = function (roomId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId)
 }
@@ -753,13 +774,12 @@ FranklyClient.prototype.deleteRoom = function (roomId) {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
- *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires FranklyClient#delete
- * @fires FranklyClient#error
+ * @fires Client#delete
+ * @fires Client#error
  */
-FranklyClient.prototype.deleteRoomListener = function (roomId, userId) {
+Client.prototype.deleteRoomListener = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/listeners/' + userId)
 }
@@ -775,13 +795,12 @@ FranklyClient.prototype.deleteRoomListener = function (roomId, userId) {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
- *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires FranklyClient#delete
- * @fires FranklyClient#error
+ * @fires Client#delete
+ * @fires Client#error
  */
-FranklyClient.prototype.deleteRoomParticipant = function (roomId, userId) {
+Client.prototype.deleteRoomParticipant = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/participants/' + userId)
 }
@@ -797,47 +816,46 @@ FranklyClient.prototype.deleteRoomParticipant = function (roomId, userId) {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
- *   object or the reject callback will be called with an instance of
- *   {@link FranklyError}.
+ *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires FranklyClient#delete
- * @fires FranklyClient#error
+ * @fires Client#delete
+ * @fires Client#error
  */
-FranklyClient.prototype.deleteRoomSubscriber = function (roomId, userId) {
+Client.prototype.deleteRoomSubscriber = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/subscribers/' + userId)
 }
 
-FranklyClient.prototype.deleteRoomOwner = function (roomId, userId) {
+Client.prototype.deleteRoomOwner = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/owners/' + userId)
 }
 
-FranklyClient.prototype.deleteRoomModerator = function (roomId, userId) {
+Client.prototype.deleteRoomModerator = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/moderators/' + userId)
 }
 
-FranklyClient.prototype.deleteRoomMember = function (roomId, userId) {
+Client.prototype.deleteRoomMember = function (roomId, userId) {
   assertDefined(arguments)
   return this.del('/rooms/' + roomId + '/members/' + userId)
 }
 
-FranklyClient.prototype.deleteRoomVerifiedUser = function (roomId, userId) {
+Client.prototype.deleteRoomAnnouncer = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/verifiedusers/' + userId)
+  return this.del('/rooms/' + roomId + '/announcers/' + userId)
 }
 
-FranklyClient.prototype.deleteSession = function () {
+Client.prototype.deleteSession = function () {
   return this.del('/session')
 }
 
-FranklyClient.prototype.deleteUser = function (userId) {
+Client.prototype.deleteUser = function (userId) {
   assertDefined(arguments)
   return this.del('/users/' + userId)
 }
 
-module.exports = FranklyClient
+module.exports = Client
 
 function assertDefined(args) {
   var offset = undefined
@@ -856,10 +874,10 @@ function assertDefined(args) {
 }
 
 /**
- * This should be the first method called on an instance of FranklyClient. After
+ * This should be the first method called on an instance of Client. After
  * succesfully returning, the client can be used to interact with the Frankly API.
  *
- * @method FranklyClient#open
+ * @method Client#open
  *
  * @param {...object} args
  *
@@ -883,26 +901,26 @@ function assertDefined(args) {
  * @throws {Error}
  *   If the number of arguments is invalid.
  *
- * @fires FranklyClient#open
- * @fires FranklyClient#authenticate
- * @fires FranklyClient#connect
- * @fires FranklyClient#disconnect
- * @fires FranklyClient#error
+ * @fires Client#open
+ * @fires Client#authenticate
+ * @fires Client#connect
+ * @fires Client#disconnect
+ * @fires Client#error
  */
 
 /**
  * Shuts down all connections and releases system resources held by this client
  * object.
  *
- * @method FranklyClient#close
+ * @method Client#close
  *
- * @fires FranklyClient#close
+ * @fires Client#close
  */
 
 /**
- * Open event, fired when the {@link FranklyClient#open} method is called.
+ * Open event, fired when the {@link Client#open} method is called.
  *
- * @event FranklyClient#open
+ * @event Client#open
  * @type {undefined}
  */
 
@@ -910,7 +928,7 @@ function assertDefined(args) {
  * Authentication event, fired when the client successfully authenticates
  * against the Frankly API.
  *
- * @event FranklyClient#authenticate
+ * @event Client#authenticate
  * @type {object}
  */
 
@@ -918,7 +936,7 @@ function assertDefined(args) {
  * Connection event, fired when the client sucessfully establish a
  * connection to a Frankly server.
  *
- * @event FranklyClient#connect
+ * @event Client#connect
  * @type {undefined}
  */
 
@@ -926,7 +944,7 @@ function assertDefined(args) {
  * Disconnection event, fired when the client gets disconnected from a
  * Frankly server it had previously established a connection to.
  *
- * @event FranklyClient#disconnect
+ * @event Client#disconnect
  * @type {object}
  *
  * @property {integer} code
@@ -939,7 +957,7 @@ function assertDefined(args) {
 /**
  * Object fetching event, fired when the client fetches an object through the Frankly API.
  *
- * @event FranklyClient#read
+ * @event Client#read
  * @type {object}
  * @property {string} type
  *   The event type which represent what kind of data is carried.
@@ -948,7 +966,7 @@ function assertDefined(args) {
 /**
  * Object creation event, fired when the client creates an object throught the Frankly API.
  *
- * @event FranklyClient#create
+ * @event Client#create
  * @type {object}
  * @property {string} type
  *   The event type which represent what kind of data is carried.
@@ -958,7 +976,7 @@ function assertDefined(args) {
  * Object update event, fired when the client updates an object or when an update is made
  * by an external action on an object the client is listening (message sends for example).
  *
- * @event FranklyClient#update
+ * @event Client#update
  * @type {object}
  * @property {string} type
  *   The event type which represent what kind of data is carried.
@@ -968,7 +986,7 @@ function assertDefined(args) {
  * Object deletion event, fired when the client deletes an object or when an object is
  * deleted by an external action (participants leaving a room for example).
  *
- * @event FranklyClient#delete
+ * @event Client#delete
  * @type {object}
  * @property {string} type
  *   The event type which represent what kind of data is carried.
@@ -978,14 +996,14 @@ function assertDefined(args) {
  * Error event, fired whenever an error is detected on an operation peformed
  * by the client.
  *
- * @event FranklyClient#error
- * @type {FranklyError}
+ * @event Client#error
+ * @type {Error}
  */
 
 /**
- * Close event, fired when the {@link FranklyClient#close} method is called.
+ * Close event, fired when the {@link Client#close} method is called.
  *
- * @event FranklyClient#close
+ * @event Client#close
  * @type {boolean}
  * @property {boolean} hasError
  *   Set to true if the client was closed due to an error.

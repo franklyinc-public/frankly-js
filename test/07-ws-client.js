@@ -28,10 +28,18 @@ var assert  = require('assert')
 var jwt     = require('../frankly/jwt.js')
 var Client  = require('../frankly/client.js')
 
-describe('frankly.Client', function () {
+describe('frankly.Client [ws]', function () {
   var appKey    = process.env.FRANKLY_APP_KEY
   var appSecret = process.env.FRANKLY_APP_SECRET
   var appHost   = process.env.FRANKLY_APP_HOST
+
+  if (appHost.indexOf('https') === 0) {
+    appHost = 'wss' + appHost.slice(5)
+  }
+
+  if (appHost.indexOf('http') === 0) {
+    appHost = 'ws' + appHost.slice(4)
+  }
 
   describe('auth', function () {
     it("authenticate a client against a Frankly server running at " + appHost, function (done) {
@@ -137,7 +145,7 @@ describe('frankly.Client', function () {
       })
 
       client.on('error', done)
-      client.open(jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
+      client.open(appKey, appSecret)
     })
   })
 
@@ -201,7 +209,7 @@ describe('frankly.Client', function () {
       })
 
       client.on('error', done)
-      client.open(jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
+      client.open(appKey, appSecret)
     })
   })
 

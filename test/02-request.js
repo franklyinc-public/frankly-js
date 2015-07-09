@@ -25,7 +25,6 @@
 
 var assert       = require('assert')
 var Promise      = require('promise')
-var FranklyError = require('../frankly/error.js')
 var Packet       = require('../frankly/packet.js')
 var RequestStore = require('../frankly/requeststore.js')
 
@@ -59,11 +58,11 @@ describe('frankly.Request', function () {
         rs.load(packet2).resolve(packet2.data)
       }).then(done).catch(function (error) {
         try {
-          assert(error instanceof FranklyError)
+          assert(error instanceof Error)
           assert.strictEqual(error.operation, 'read')
           assert.strictEqual(error.path, '/answer/42')
           assert.strictEqual(error.status, 400)
-          assert.strictEqual(error.message, 'something went wrong')
+          assert.strictEqual(error.reason, 'something went wrong')
           done()
         } catch (e) {
           done(e)
@@ -84,11 +83,11 @@ describe('frankly.Request', function () {
         rs.timeout(Date.now() + 20)
       }).then(done).catch(function (error) {
         try {
-          assert(error instanceof FranklyError)
+          assert(error instanceof Error)
           assert.strictEqual(error.operation, 'read')
           assert.strictEqual(error.path, '/answer/42')
           assert.strictEqual(error.status, 408)
-          assert.strictEqual(error.message, 'the request timed out')
+          assert.strictEqual(error.reason, 'the request timed out')
           done()
         } catch (e) {
           done(e)
@@ -109,11 +108,11 @@ describe('frankly.Request', function () {
         rs.cancel()
       }).then(done).catch(function (error) {
         try {
-          assert(error instanceof FranklyError)
+          assert(error instanceof Error)
           assert.strictEqual(error.operation, 'read')
           assert.strictEqual(error.path, '/answer/42')
           assert.strictEqual(error.status, 500)
-          assert.strictEqual(error.message, 'the request got canceled')
+          assert.strictEqual(error.reason, 'the request got canceled')
           done()
         } catch (e) {
           done(e)

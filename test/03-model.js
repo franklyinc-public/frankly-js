@@ -197,14 +197,14 @@ describe('frankly.Model', function () {
     })
   })
 
-  describe('room-verified-user', function () {
+  describe('room-announcer', function () {
     it('checks if matching a verified user model path produces the expected result', function () {
-      var obj = model.build(['rooms', 1, 'verifiedusers', 2], {
+      var obj = model.build(['rooms', 1, 'announcers', 2], {
         id: 2,
         display_name: 'Luke Skywalker',
       })
 
-      assert.strictEqual(obj.type, 'room-verified-user')
+      assert.strictEqual(obj.type, 'room-announcer')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
       assert.strictEqual(obj.user.display_name, 'Luke Skywalker')

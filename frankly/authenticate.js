@@ -23,21 +23,23 @@
  */
 'use strict'
 
-var http         = require('./http.js')
-var url          = require('url')
-var Promise      = require('promise')
-var FranklyError = require('./error.js')
+var Promise = require('promise')
+var url     = require('url')
+var Error   = require('./error.js')
+var http    = require('./http.js')
 
 function errorHandler(operation, path, reject) {
   return function (err) {
-    if (!(err instanceof FranklyError)) {
-      err = new FranklyError(operation, path, 500, err.message)
+    if (err.status === undefined) {
+      err = Error.make(operation, path, 500, err.message)
     }
     reject(err)
   }
 }
 
 function authenticate(address, generateIdentityToken, options) {
+  var u = undefined
+
   if (typeof address !== 'string') {
     throw new Error("authentication against Frankly servers requires a string for address but " + address + " was found")
   }
@@ -46,17 +48,23 @@ function authenticate(address, generateIdentityToken, options) {
     throw new Error("authentication against Frankly servers requires a function callback as second argument to generate the identity token")
   }
 
-  address = url.parse(address)
+  u = url.parse(address)
 
-  switch (address.protocol) {
+  switch (u.protocol) {
   case 'http:':
-    break
-
   case 'https:':
     break
 
+  case 'ws:':
+    u.protocol = 'http:'
+    break
+
+  case 'wss:':
+    u.protocol = 'https:'
+    break
+
   default:
-    throw new Error("authenticating against Frankly servers is only available over http or https but " + address.protocol + " was found")
+    throw new Error("authenticating against Frankly servers is only available over http or https but " + u.protocol + " was found")
   }
 
   if (options === undefined) {
@@ -67,18 +75,15 @@ function authenticate(address, generateIdentityToken, options) {
     options.timeout = 5000
   }
 
-  options.protocol = address.protocol
-  options.host = address.hostname
-  options.port = address.port
+  options.protocol = u.protocol
+  options.host = u.hostname
+  options.port = u.port
 
   function generateNonce() {
     options.path = '/auth/nonce'
     return new Promise(function (resolve, reject) {
       http.get(options)
         .then(function (res) {
-          if (res.statusCode !== 200) {
-            throw new FranklyError('read', options.path, res.statusCode, res.content)
-          }
           resolve(res.content)
         })
         .catch(errorHandler('read', options.path, reject))
@@ -90,10 +95,11 @@ function authenticate(address, generateIdentityToken, options) {
     return new Promise(function (resolve, reject) {
       http.get(options)
         .then(function (res) {
-          if (res.statusCode !== 200) {
-            throw new FranklyError('read', options.path, res.statusCode, res.content)
-          }
-          resolve(res.content)
+          var session = res.content
+          session.headers = res.headers
+          session.cookies = res.cookies
+          session.xsrf = res.headers['frankly-app-xsrf']
+          resolve(session)
         })
         .catch(errorHandler('read', options.path, reject))
     })

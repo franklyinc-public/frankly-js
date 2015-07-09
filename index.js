@@ -23,19 +23,19 @@
  */
 'use strict'
 
-var Promise       = require('promise')
-var FranklyClient = require('./frankly/client.js')
-var FranklyError  = require('./frankly/error.js')
-var jwt           = require('./frankly/jwt.js')
-var parent        = require('./frankly/parent.js')
-var widgets       = require('./frankly/widgets.js')
-var runtime       = require('./frankly/runtime.js')
+var Promise = require('promise')
+var Client  = require('./frankly/client.js')
+var http    = require('./frankly/http.js')
+var jwt     = require('./frankly/jwt.js')
+var parent  = require('./frankly/parent.js')
+var widgets = require('./frankly/widgets.js')
+var runtime = require('./frankly/runtime.js')
 
 var index = {
-  FranklyClient          : FranklyClient,
-  FranklyError           : FranklyError,
+  Client                 : Client,
   generateIdentityToken  : jwt.generateIdentityToken,
   identityTokenGenerator : jwt.identityTokenGenerator,
+  http                   : http,
   parent                 : parent,
   widgets                : widgets,
   runtime                : runtime,

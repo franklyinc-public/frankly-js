@@ -19,19 +19,26 @@ the require function, here's a quick example of how this is usually done:
 
 ```js
 var frankly = require('frankly-js')
-var client  = new frankly.FranklyClient()
 
-var appKey    = 'app key from https://console.franklychat.com'
-var appSecret = 'app secret from https://console.franklychat.com'
+// Create a client that interacts with the Frankly API over HTTP, ideal for
+// efficient server-to-server operations.
+var client = new frankly.Client('https')
+var key    = '...'
+var secret = '...'
 
-client.open(frankly.identityTokenGenerator(appKey, appSecret, {
-    role: 'admin',
-}))
-.then(function (session) {
-    ...
+// Opens the client to make operations on behalf of the admin user of the app.
+client.open(key, secret, { role: 'admin' })
+
+// Send a sticky message to a room with id 42.
+client.createRoomMessage(42, {
+  contents : [{ type: 'text/plain', value: 'Hello World!' }],
+  sticky   : true,
+})
+.then(function (message) {
+  ...
 })
 .catch(function (error) {
-    ...
+  ...
 })
 ```
 
@@ -43,20 +50,47 @@ The code is also published online and can be embeded directly into a web page:
 ```html
 <script src="https://cdn.franklychat.com/frankly-js/0/frankly.min.js"></script>
 <script>
-  var client = new frankly.FranklyClient()
+  // Create a client that interacts with the Frankly API over WebSocket,
+  // enables receiving real-time messages, automatic reconnections and
+  // authentication.
+  var client = new frankly.Client('wss')
 
   client.open(function (nonce) {
       return new Promise(function (resolve, reject) {
-          // call backend endpoint to generate identity tokens and resolve the
+          // Call a backend endpoint to generate identity tokens and resolve the
           // promise.
           ...
       })
   })
-  .then(function (session) {
-      ...
+
+  client.on('error', function (error) {
+    // Called if the client fails to connect or authenticate.
+    ...
   })
-  .catch(function (error) {
-      ...
+
+  client.on('authenticate', function (session) {
+    // Called when the client successfully authenticates.
+    ...
+  })
+
+  client.on('connect', function () {
+    // Called when the client sucessfully establishes a websocket connection.
+    ...
+  })
+
+  client.on('disconnect', function (event) {
+    // Called if the client loses an established websocket connection.
+    ...
+  })
+
+  client.on('update', function (event) {
+    // Called when the server pushes a resource update signal to the client.
+    ...
+  })
+
+  client.on('delete', function (event) {
+    // Called when the server pushes a resource deletion signal to the client.
+    ...
   })
 </script>
 ```

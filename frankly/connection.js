@@ -25,13 +25,15 @@
 
 var EventEmitter = require('events').EventEmitter
 var Promise      = require('promise')
+var url          = require('url')
 var authenticate = require('./authenticate.js')
 var jwt          = require('./jwt.js')
 var model        = require('./model.js')
+var Error        = require('./error.js')
 var Packet       = require('./packet.js')
-var Socket       = require('./socket.js')
 var RequestStore = require('./requeststore.js')
-var FranklyError = require('./error.js')
+var HttpBackend  = require('./httpbackend.js')
+var WsBackend    = require('./wsbackend.js')
 
 function Connection(address, timeout) {
   EventEmitter.call(this)
@@ -39,7 +41,7 @@ function Connection(address, timeout) {
   this.address = address
   this.timeout = timeout
   this.session = undefined
-  this.socket  = undefined
+  this.backend = undefined
   this.timer   = undefined
   this.running = false
   this.idseq   = 1
@@ -51,11 +53,8 @@ Connection.prototype = Object.create(EventEmitter.prototype)
 Connection.prototype.constructor = Connection
 
 Connection.prototype.open = function () {
-  var generateIdentityToken = undefined
-  var appKey    = undefined
-  var appSecret = undefined
-  var options   = undefined
-  var self      = this
+  var args = undefined
+  var self = this
 
   if (this.running) {
     throw new Error("open was called multiple times on the same client before it was closed")
@@ -63,43 +62,46 @@ Connection.prototype.open = function () {
 
   switch (arguments.length) {
   case 1:
-    generateIdentityToken = arguments[0]
+    args = { generateIdentityToken: arguments[0] }
 
-    if (typeof generateIdentityToken !== 'function') {
+    if (typeof args.generateIdentityToken !== 'function') {
       throw new TypeError("the constructor argument must be a function")
     }
 
     break
 
   case 2:
-    appKey    = arguments[0]
-    appSecret = arguments[1]
+    args = {
+      appKey    : arguments[0],
+      appSecret : arguments[1],
+      options   : { },
+    }
 
-    if (typeof appKey !== 'string') {
+    if (typeof args.appKey !== 'string') {
       throw new TypeError("the constructor's first argument must be a string")
     }
 
-    if (typeof appSecret !== 'string') {
+    if (typeof args.appSecret !== 'string') {
       throw new TypeError("the constructor's second argument must be a string")
     }
 
-    generateIdentityToken = jwt.identityTokenGenerator(appKey, appSecret)
     break
 
   case 3:
-    appKey    = arguments[0]
-    appSecret = arguments[1]
-    options   = arguments[2]
+    args = {
+      appKey    : arguments[0],
+      appSecret : arguments[1],
+      options   : arguments[2],
+    }
 
-    if (typeof appKey !== 'string') {
+    if (typeof args.appKey !== 'string') {
       throw new TypeError("the constructor's first argument must be a string")
     }
 
-    if (typeof appSecret !== 'string') {
+    if (typeof args.appSecret !== 'string') {
       throw new TypeError("the constructor's second argument must be a string")
     }
 
-    generateIdentityToken = jwt.identityTokenGenerator(appKey, appSecret, options)
     break
 
   default:
@@ -109,7 +111,19 @@ Connection.prototype.open = function () {
   this.running = true
   this.timer = setInterval(function () { pulse(self) }, 1000)
   this.emit('open')
-  start(this, this.version, generateIdentityToken)
+
+  switch (url.parse(this.address).protocol) {
+  case 'ws:':
+  case 'wss:':
+    start(this, this.version + 1, args, 1000, WsBackend)
+    break
+
+  case 'http:':
+  case 'https:':
+  default:
+    start(this, this.version + 1, args, 1000, HttpBackend)
+    break
+  }
 }
 
 Connection.prototype.close = function (hasError) {
@@ -135,16 +149,16 @@ Connection.prototype.close = function (hasError) {
 
   for (key in exp) {
     req = exp[key]
-    this.emit('error', new FranklyError(req.operation(), req.packet.path, 500, "the request got canceled"))
+    this.emit('error', Error.make(req.operation(), req.packet.path, 500, "the request got canceled"))
   }
 
-  if (this.socket !== undefined) {
+  if (this.backend !== undefined) {
     try {
-      this.socket.close()
+      this.backend.close()
     } catch (e) {
       console.log(e)
     } finally {
-      this.socket = undefined
+      this.backend = undefined
     }
   }
 
@@ -157,12 +171,6 @@ Connection.prototype.emit = function () {
   } catch (e) {
     console.log(e)
   }
-}
-
-Connection.prototype.nextid = function () {
-  var id = this.idseq
-  this.idseq = id + 1
-  return id
 }
 
 Connection.prototype.request = function (type, path, params, payload) {
@@ -188,7 +196,7 @@ Connection.prototype.request = function (type, path, params, payload) {
   packet = new Packet(
     type,
     seed,
-    this.nextid(),
+    this.idseq++,
     splitPath(path),
     params,
     payload
@@ -196,14 +204,14 @@ Connection.prototype.request = function (type, path, params, payload) {
 
   return new Promise(function (resolve, reject) {
     if (!self.running) {
-      reject(new FranklyError(type, path, 400, "submitting request before opening is not allowed"))
+      reject(Error.make(type, path, 400, "submitting request before opening is not allowed"))
       return
     }
 
     self.pending.store(packet, Date.now() + timeout, resolve, function (e) {
-      if (e.status === 401 && self.version === packet.version && self.socket !== undefined) {
+      if (e.status === 401 && self.version === packet.version && self.backend !== undefined) {
         try {
-          self.socket.close()
+          self.backend.close()
         } catch (e) {
           console.log(e)
         }
@@ -211,16 +219,18 @@ Connection.prototype.request = function (type, path, params, payload) {
       reject(e)
     })
 
-    if (self.socket !== undefined) {
+    if (self.backend !== undefined) {
       packet.version = self.version
       packet = packet.clone()
       packet.seed = 0
-      self.socket.send(packet)
+      self.backend.send(packet)
     }
   })
 }
 
-function start(self, version, generateIdentityToken, delay) {
+function start(self, version, args, delay, Backend) {
+  self.version++
+
   if (version !== self.version) {
     return
   }
@@ -236,7 +246,7 @@ function start(self, version, generateIdentityToken, delay) {
 
     self.session = session
     self.emit('authenticate', session)
-    connect(self, version, generateIdentityToken)
+    connect(self, version, args, delay, Backend)
   }
 
   function failure(error) {
@@ -266,62 +276,39 @@ function start(self, version, generateIdentityToken, delay) {
     }
 
     setTimeout(function () {
-      start(self, version, generateIdentityToken, delay)
+      start(self, version + 1, args, delay, Backend)
     }, delay)
   }
 
-  function auth() {
-    if (version !== self.version) {
-      return
-    }
-
-    authenticate(self.address, generateIdentityToken, { timeout: self.timeout.request })
+  if (args.generateIdentityToken === undefined) {
+    success({
+      key    : args.appKey,
+      secret : args.appSecret,
+      user   : args.user,
+      role   : args.role,
+    })
+  } else {
+    authenticate(self.address, args.generateIdentityToken, { timeout: self.timeout.request })
       .then(success)
       .catch(failure)
   }
-
-  function reauth() {
-    var session = self.session
-    var timeout = self.timeout.request
-
-    if (version !== self.version) {
-      return
-    }
-
-    http.get({ host: self.address, path: makeHttpQuery(session, '/auth'), timeout: timeout })
-      .then(function (res) {
-        if (res.statusCode !== 200) {
-          self.session = undefined
-          auth()
-        } else {
-          success(res.content)
-        }
-      })
-      .catch(failure)
-  }
-
-  if (self.session !== undefined) {
-    reauth()
-  } else {
-    auth()
-  }
 }
 
-function connect(self, version, generateIdentityToken) {
+function connect(self, version, args, delay, Backend) {
   var session = self.session
+  var backend = undefined
   var ready   = false
-  var socket  = undefined
 
   if (version !== self.version) {
     return
   }
 
-  socket = new Socket(self.address + makeHttpQuery(session, '/'))
+  backend = new Backend(self.address, session)
 
-  socket.on('open', function () {
+  backend.on('open', function () {
     if (!ready && version === self.version) {
       ready = true
-      self.socket = socket
+      self.backend = backend
       self.emit('connect')
       self.pending.each(function (req) {
         var packet = undefined
@@ -337,23 +324,23 @@ function connect(self, version, generateIdentityToken) {
           packet.seed = 0
         }
 
-        socket.send(packet)
+        backend.send(packet)
       })
     } else {
-      socket.close()
+      backend.close()
     }
   })
 
-  socket.on('close', function (code, reasonse) {
+  backend.on('close', function (code, reason) {
     if (!ready && version === self.version) {
       ready = true
-      self.socket = undefined
+      self.backend = undefined
       self.emit('disconnect', { code: code, reason: reason })
-      start(self, version, generateIdentityToken)
+      start(self, version + 1, args, delay, Backend)
     }
   })
 
-  socket.on('packet', function (packet) {
+  backend.on('packet', function (packet) {
     if (version === self.version) {
       if (packet.seed === 0) {
         packet.seed = self.session.seed
@@ -370,9 +357,9 @@ function connect(self, version, generateIdentityToken) {
   setTimeout(function() {
     if (!ready && version === self.version) {
       ready = true
-      self.emit('error', new FranklyError('connect', '/', 408, "connection timed out"))
-      socket.close()
-      start(self, version, generateIdentityToken)
+      self.emit('error', Error.make('connect', '/', 408, "connection timed out"))
+      backend.close()
+      start(self, version + 1, args, delay, Backend)
     }
   }, self.timeout.connect)
 }
@@ -384,7 +371,7 @@ function pulse(self) {
 
   for (key in exp) {
     req = exp[key]
-    self.emit('error', new FranklyError(req.operation(), req.packet.path, 408, "the request timed out"))
+    req.reject(Error.make(req.operation(), req.packet.path, 408, "the request timed out"))
   }
 }
 
@@ -403,43 +390,18 @@ function handleResponse(self, packet) {
     switch (type) {
     case 0:
       req.resolve(data)
-      data = model.build(path, data)
-
-      if (data === undefined) {
-        return
-      }
-
-      switch (req.packet.type) {
-      case 0:
-        self.emit('read', data)
-        break
-
-      case 1:
-        self.emit('create', data)
-        break
-
-      case 2:
-        self.emit('update', data)
-        break
-
-      case 3:
-        self.emit('delete', data)
-        break
-      }
-
       return
 
     case 1:
-      err = new FranklyError(req.operation(), path, data.status, data.error)
+      err = Error.make(req.operation(), path, data.status, data.error)
       break
 
     default:
-      err = new FranklyError(req.operation(), path, 500, "the server responded with an invalid packet type [" + type + "]")
+      err = Error.make(req.operation(), path, 500, "the server responded with an invalid packet type (" + type + ")")
       break
     }
 
     req.reject(err)
-    self.emit('error', err)
   }
 }
 

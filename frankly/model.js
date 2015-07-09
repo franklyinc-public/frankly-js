@@ -42,8 +42,8 @@ var matchBuild = [
   { match: ['rooms', '*', 'members', '*'],
     build: buildRoomMember },
 
-  { match: ['rooms', '*', 'verifiedusers', '*'],
-    build: buildRoomVerifiedUser },
+  { match: ['rooms', '*', 'announcers', '*'],
+    build: buildRoomAnnouncer },
 
   { match: ['rooms', '*', 'count'],
     build: buildRoomCount },
@@ -193,13 +193,13 @@ function buildRoomMember(path, payload) {
   }
 }
 
-function buildRoomVerifiedUser(path, payload) {
+function buildRoomAnnouncer(path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
 
   return {
-    type: 'room-verified-user',
+    type: 'room-announcer',
     room: { id: parseInt(path[1]) },
     user: payload,
   }

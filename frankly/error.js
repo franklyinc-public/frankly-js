@@ -23,43 +23,19 @@
  */
 'use strict'
 
-/**
- * Instances of this class are used to represent errors that may be raised from
- * any call to methods of the {@linke FranklyClient} class.
- *
- * @constructor
- *
- * @param {string} operation
- *   The operation that generated the error, one of 'authenticate', 'create',
- *   'read', 'update' or 'delete'.
- *
- * @param {string} path
- *   The path on which the operation that generated the error was executed.
- *
- * @param {int} status
- *   The status code representing the error.
- *
- * @param {string} message
- *   A human-readable description of the error.
- */
-function FranklyError(operation, path, status, message) {
-  Error.call(this)
+module.exports = {
+  make: function (operation, path, status, reason) {
+    var err = new Error('[' + status + '] ' + reason)
 
-  if (typeof path !== 'string') {
-    path = joinPath(path)
+    if (typeof path !== 'string') {
+      path = '/' + path.join('/')
+    }
+
+    err.operation = operation
+    err.path      = path
+    err.status    = status
+    err.reason    = reason
+
+    return err
   }
-
-  this.operation = operation
-  this.path      = path
-  this.status    = status
-  this.message   = message
 }
-
-FranklyError.prototype = Object.create(Error.prototype)
-FranklyError.prototype.constructor = FranklyError
-
-function joinPath(path) {
-  return '/' + path.join('/')
-}
-
-module.exports = FranklyError
