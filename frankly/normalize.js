@@ -25,6 +25,7 @@
 
 function normalize(object) {
   var k = undefined
+  var x = undefined
 
   if (typeof object === 'string') {
     var date = new Date(object)
@@ -39,13 +40,46 @@ function normalize(object) {
     return object
   }
 
-  if (object !== null) {
+  if (object === null) {
+    return object
+  }
+
+  if (object instanceof Array) {
     for (k in object) {
       object[k] = normalize(object[k])
     }
+    return object
   }
 
-  return object
+  x = { }
+
+  for (k in object) {
+    x[camelCase(k)] = normalize(object[k])
+  }
+
+  return x
+}
+
+function camelCase(k) {
+  var s = ''
+  var i = undefined
+  var c = undefined
+  var x = false
+
+  for (i = 0; i != k.length; i++) {
+    c = k.charAt(i)
+
+    if (c === '_') {
+      x = true
+    } else if (x) {
+      x = false
+      s += c.toUpperCase()
+    } else {
+      s += c
+    }
+  }
+
+  return s
 }
 
 module.exports = normalize

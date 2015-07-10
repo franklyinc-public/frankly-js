@@ -23,12 +23,14 @@
  */
 'use strict'
 
-var WebSocket = require('ws')
-var qs        = require('querystring')
-var url       = require('url')
-var Cookie    = require('./Cookie.js')
-var Packet    = require('./packet.js')
-var runtime   = require('./runtime.js')
+var WebSocket   = require('ws')
+var qs          = require('querystring')
+var url         = require('url')
+var Cookie      = require('./Cookie.js')
+var Packet      = require('./packet.js')
+var runtime     = require('./runtime.js')
+var normalize   = require('./normalize.js')
+var denormalize = require('./denormalize.js')
 
 function WsBackend(address, session) {
   WebSocket.call(this, makeURL(address, session), 'chat')
@@ -56,6 +58,8 @@ function WsBackend(address, session) {
 
     try {
       packet = Packet.decode(data)
+      packet.params  = normalize(packet.params)
+      packet.payload = normalize(packet.payload)
     } catch (e) {
       this.close(1003, "failed to decode packet received from server")
       return
@@ -73,6 +77,8 @@ if (runtime.browser) {
   // When used in the browser the WebSocket.send function accepts Uint8Array
   // instances produced by Packet.encode.
   WsBackend.prototype.send = function (packet) {
+    packet.params  = denormalize(packet.params)
+    packet.payload = denormalize(packet.payload)
     WebSocket.prototype.send.call(this, Packet.encode(packet))
   }
 } else {
@@ -81,6 +87,8 @@ if (runtime.browser) {
   // This causes an extra memory copy but client requests being pretty small
   // it shouldn't have any impact on performance.
   WsBackend.prototype.send = function (packet) {
+    packet.params  = denormalize(packet.params)
+    packet.payload = denormalize(packet.payload)
     WebSocket.prototype.send.call(this, new Buffer(Packet.encode(packet)), { binary: true })
   }
 }

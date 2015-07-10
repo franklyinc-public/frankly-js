@@ -25,8 +25,13 @@
 
 function denormalize(object) {
   var k = undefined
+  var x = undefined
 
   if (typeof object !== 'object') {
+    return object
+  }
+
+  if (object === null) {
     return object
   }
 
@@ -34,11 +39,39 @@ function denormalize(object) {
     return object.toISOString()
   }
 
-  for (k in object) {
-    object[k] = denormalize(object[k])
+  if (object instanceof Array) {
+    for (k in object) {
+      object[k] = denormalize(object[k])
+    }
+    return object
   }
 
-  return object
+  x = { }
+
+  for (k in object) {
+    x[underscore(k)] = denormalize(object[k])
+  }
+
+  return x
+}
+
+function underscore(k) {
+  var s = ''
+  var i = undefined
+  var c = undefined
+
+  for (i = 0; i != k.length; i++) {
+    c = k.charAt(i)
+
+    if (c === c.toUpperCase()) {
+      s += '_'
+      s += c.toLowerCase()
+    } else {
+      s += c
+    }
+  }
+
+  return s
 }
 
 module.exports = denormalize

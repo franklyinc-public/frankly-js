@@ -59,12 +59,12 @@ describe('frankly.Model', function () {
     it('checks if matching a user model path produces the expected result', function () {
       var obj = model.build(['users', 1234], {
         id: 1234,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'user')
       assert.strictEqual(obj.user.id, 1234)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 
@@ -131,13 +131,13 @@ describe('frankly.Model', function () {
     it('checks if matching a participant model path produces the expected result', function () {
       var obj = model.build(['rooms', 1, 'participants', 2], {
         id: 2,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'room-participant')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 
@@ -145,13 +145,13 @@ describe('frankly.Model', function () {
     it('checks if matching a subscriber model path produces the expected result', function () {
       var obj = model.build(['rooms', 1, 'subscribers', 2], {
         id: 2,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'room-subscriber')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 
@@ -159,13 +159,13 @@ describe('frankly.Model', function () {
     it('checks if matching a owner model path produces the expected result', function () {
       var obj = model.build(['rooms', 1, 'owners', 2], {
         id: 2,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'room-owner')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 
@@ -173,13 +173,13 @@ describe('frankly.Model', function () {
     it('checks if matching a moderator model path produces the expected result', function () {
       var obj = model.build(['rooms', 1, 'moderators', 2], {
         id: 2,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'room-moderator')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 
@@ -187,13 +187,13 @@ describe('frankly.Model', function () {
     it('checks if matching a member model path produces the expected result', function () {
       var obj = model.build(['rooms', 1, 'members', 2], {
         id: 2,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'room-member')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 
@@ -201,13 +201,13 @@ describe('frankly.Model', function () {
     it('checks if matching a verified user model path produces the expected result', function () {
       var obj = model.build(['rooms', 1, 'announcers', 2], {
         id: 2,
-        display_name: 'Luke Skywalker',
+        displayName: 'Luke Skywalker',
       })
 
       assert.strictEqual(obj.type, 'room-announcer')
       assert.strictEqual(obj.room.id, 1)
       assert.strictEqual(obj.user.id, 2)
-      assert.strictEqual(obj.user.display_name, 'Luke Skywalker')
+      assert.strictEqual(obj.user.displayName, 'Luke Skywalker')
     })
   })
 

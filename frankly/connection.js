@@ -197,7 +197,7 @@ Connection.prototype.request = function (type, path, params, payload) {
     type,
     seed,
     this.idseq++,
-    splitPath(path),
+    formatPath(path),
     params,
     payload
   )
@@ -430,21 +430,14 @@ function makeHttpQuery(session, path) {
   }
 }
 
-function splitPath(path) {
-  var list1 = path.split('/')
-  var list2 = [ ]
-  var value = undefined
+function formatPath(path) {
   var index = undefined
 
-  for (index in list1) {
-    value = list1[index]
-
-    if (value.length !== 0) {
-      list2.push(value)
-    }
+  for (index = 0; index != path.length; ++index) {
+    path[index] = path[index].toString()
   }
 
-  return list2
+  return path
 }
 
 module.exports = Connection

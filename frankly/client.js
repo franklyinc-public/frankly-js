@@ -144,7 +144,7 @@ Client.prototype.read = function (path, params, payload) {
  */
 Client.prototype.readAnnouncement = function (announcementId) {
   assertDefined(arguments)
-  return this.read('/announcements/' + announcementId)
+  return this.read(['announcements', announcementId])
 }
 
 /**
@@ -157,7 +157,7 @@ Client.prototype.readAnnouncement = function (announcementId) {
  */
 Client.prototype.readAnnouncementList = function () {
   assertDefined(arguments)
-  return this.read('/announcements')
+  return this.read(['announcements'])
 }
 
 /**
@@ -173,7 +173,7 @@ Client.prototype.readAnnouncementList = function () {
  */
 Client.prototype.readAnnouncementRoomList = function (announcementId) {
   assertDefined(arguments)
-  return this.read('/announcements/' + annoucementId + '/rooms')
+  return this.read(['announcements', annoucementId, 'rooms'])
 }
 
 /**
@@ -189,7 +189,7 @@ Client.prototype.readAnnouncementRoomList = function (announcementId) {
  */
 Client.prototype.readApp = function (appId) {
   assertDefined(arguments)
-  return this.read('/apps/' + appId)
+  return this.read(['apps', appId])
 }
 
 /**
@@ -205,7 +205,7 @@ Client.prototype.readApp = function (appId) {
  */
 Client.prototype.readRoom = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId)
+  return this.read(['rooms', roomId])
 }
 
 /**
@@ -218,7 +218,7 @@ Client.prototype.readRoom = function (roomId) {
  */
 Client.prototype.readRoomList = function () {
   assertDefined(arguments)
-  return this.read('/rooms')
+  return this.read(['rooms'])
 }
 
 /**
@@ -243,12 +243,12 @@ Client.prototype.readRoomList = function () {
  */
 Client.prototype.readRoomCount = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/count')
+  return this.read(['rooms', roomId, 'count'])
 }
 
 Client.prototype.readRoomMessage = function (roomId, messageId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/messages/' + messageId)
+  return this.read(['rooms', roomId, 'messages', messageId])
 }
 
 /**
@@ -288,7 +288,7 @@ Client.prototype.readRoomMessage = function (roomId, messageId) {
  */
 Client.prototype.readRoomMessageList = function (roomId, options) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/messages', options)
+  return this.read(['rooms', roomId, 'messages'], options)
 }
 
 /**
@@ -304,7 +304,7 @@ Client.prototype.readRoomMessageList = function (roomId, options) {
  */
 Client.prototype.readRoomParticipantList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/participants')
+  return this.read(['rooms', roomId, 'participants'])
 }
 
 /**
@@ -320,31 +320,31 @@ Client.prototype.readRoomParticipantList = function (roomId) {
  */
 Client.prototype.readRoomSubscriberList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/subscribers')
+  return this.read(['rooms', roomId, 'subscribers'])
 }
 
 Client.prototype.readRoomOwnerList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/owners')
+  return this.read(['rooms', roomId, 'owners'])
 }
 
 Client.prototype.readRoomModeratorList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/moderators')
+  return this.read(['rooms', roomId, 'moderators'])
 }
 
 Client.prototype.readRoomMemberList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/members')
+  return this.read(['rooms', roomId, 'members'])
 }
 
 Client.prototype.readRoomAnnouncerList = function (roomId) {
   assertDefined(arguments)
-  return this.read('/rooms/' + roomId + '/announcers')
+  return this.read(['rooms', roomId, 'announcers'])
 }
 
 Client.prototype.readSession = function () {
-  return this.read('/session')
+  return this.read(['session'])
 }
 
 /**
@@ -360,12 +360,12 @@ Client.prototype.readSession = function () {
  */
 Client.prototype.readUser = function (userId) {
   assertDefined(arguments)
-  return this.read('/users/' + userId)
+  return this.read(['users', userId])
 }
 
 Client.prototype.readUserBan = function (userId) {
   assertDefined(arguments)
-  return this.read('/users/' + userId + '/ban')
+  return this.read(['users', userId, 'ban'])
 }
 
 /**
@@ -417,7 +417,7 @@ Client.prototype.create = function (path, params, payload) {
  */
 Client.prototype.createAnnouncement = function (options) {
   assertDefined(arguments)
-  return this.create('/announcements', undefined, options)
+  return this.create(['announcements'], undefined, options)
 }
 
 /**
@@ -437,11 +437,11 @@ Client.prototype.createAnnouncement = function (options) {
  *   A description of what this chat room is intended for, it is usually a short
  *   description of topics that are discussed by participants.
  *
- * @param {string} options.avatar_image_url
+ * @param {string} options.avatarImageUrl
  *   The URL of an image to use when the room is displayed in one of the mobile
  *   or web apps embedding a Frankly SDK.
  *
- * @param {string} options.featured_image_url
+ * @param {string} options.featuredImageUrl
  *   The URL of an image to use when the room is featured in one of the mobile
  *   or web apps embedding a Frankly SDK.
  *
@@ -458,7 +458,7 @@ Client.prototype.createAnnouncement = function (options) {
  */
 Client.prototype.createRoom = function (options) {
   assertDefined(arguments)
-  return this.create('/rooms', undefined, options)
+  return this.create(['rooms'], undefined, options)
 }
 
 /**
@@ -494,7 +494,7 @@ Client.prototype.createRoomMessage = function (roomId, options) {
     options = undefined
   }
 
-  return this.create('/rooms/' + roomId + '/messages', params, options)
+  return this.create(['rooms', roomId, 'messages'], params, options)
 }
 
 /**
@@ -516,7 +516,7 @@ Client.prototype.createRoomMessage = function (roomId, options) {
  */
 Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/messages/' + messageId + '/flag')
+  return this.create(['rooms', roomId, 'messages', messageId, 'flag'])
 }
 
 /**
@@ -541,7 +541,7 @@ Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
  */
 Client.prototype.createRoomListener = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/listeners/' + userId)
+  return this.create(['rooms', roomId, 'listeners', userId])
 }
 
 /**
@@ -564,7 +564,7 @@ Client.prototype.createRoomListener = function (roomId, userId) {
  */
 Client.prototype.createRoomParticipant = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/participants/' + userId)
+  return this.create(['rooms', roomId, 'participants', userId])
 }
 
 /**
@@ -587,31 +587,31 @@ Client.prototype.createRoomParticipant = function (roomId, userId) {
  */
 Client.prototype.createRoomSubscriber = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/subscribers/' + userId)
+  return this.create(['rooms', roomId, 'subscribers', userId])
 }
 
 Client.prototype.createRoomOwner = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/owners/' + userId)
+  return this.create(['rooms', roomId, 'owners', userId])
 }
 
 Client.prototype.createRoomModerator = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/moderators/' + userId)
+  return this.create(['rooms', roomId, 'moderators', userId])
 }
 
 Client.prototype.createRoomMember = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/members/' + userId)
+  return this.create(['rooms', roomId, 'members', userId])
 }
 
 Client.prototype.createRoomAnnouncer = function (roomId, userId) {
   assertDefined(arguments)
-  return this.create('/rooms/' + roomId + '/announcers/' + userId)
+  return this.create(['rooms', roomId, 'announcers', userId])
 }
 
 Client.prototype.createUser = function (options) {
-  return this.create('/users', undefined, options)
+  return this.create(['users'], undefined, options)
 }
 
 /**
@@ -660,7 +660,7 @@ Client.prototype.update = function (path, params, payload) {
  */
 Client.prototype.updateRoom = function (roomId, options) {
   assertDefined(arguments)
-  return this.update('/rooms/' + roomId, undefined, options)
+  return this.update(['rooms', roomId], undefined, options)
 }
 
 /**
@@ -683,7 +683,7 @@ Client.prototype.updateRoom = function (roomId, options) {
  */
 Client.prototype.updateUser = function (userId, options) {
   assertDefined(arguments)
-  return this.update('/users/' + userId, undefined, options)
+  return this.update(['users', userId], undefined, options)
 }
 
 /**
@@ -734,7 +734,7 @@ Client.prototype.del = function (path, params, payload) {
  */
 Client.prototype.deleteAnnouncement = function (announcementId) {
   assertDefined(arguments)
-  return this.del('/announcements/' + announcementId)
+  return this.del(['announcements', announcementId])
 }
 
 /**
@@ -760,7 +760,7 @@ Client.prototype.deleteAnnouncement = function (announcementId) {
  */
 Client.prototype.deleteRoom = function (roomId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId)
+  return this.del(['rooms', roomId])
 }
 
 /**
@@ -781,7 +781,7 @@ Client.prototype.deleteRoom = function (roomId) {
  */
 Client.prototype.deleteRoomListener = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/listeners/' + userId)
+  return this.del(['rooms', roomId, 'listeners', userId])
 }
 
 /**
@@ -802,7 +802,7 @@ Client.prototype.deleteRoomListener = function (roomId, userId) {
  */
 Client.prototype.deleteRoomParticipant = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/participants/' + userId)
+  return this.del(['rooms', roomId, 'participants', userId])
 }
 
 /**
@@ -823,36 +823,36 @@ Client.prototype.deleteRoomParticipant = function (roomId, userId) {
  */
 Client.prototype.deleteRoomSubscriber = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/subscribers/' + userId)
+  return this.del(['rooms', roomId, 'subscribers', userId])
 }
 
 Client.prototype.deleteRoomOwner = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/owners/' + userId)
+  return this.del(['rooms', roomId, 'owners', userId])
 }
 
 Client.prototype.deleteRoomModerator = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/moderators/' + userId)
+  return this.del(['rooms', roomId, 'moderators', userId])
 }
 
 Client.prototype.deleteRoomMember = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/members/' + userId)
+  return this.del(['rooms', roomId, 'members', userId])
 }
 
 Client.prototype.deleteRoomAnnouncer = function (roomId, userId) {
   assertDefined(arguments)
-  return this.del('/rooms/' + roomId + '/announcers/' + userId)
+  return this.del(['rooms', roomId, 'announcers', userId])
 }
 
 Client.prototype.deleteSession = function () {
-  return this.del('/session')
+  return this.del(['session'])
 }
 
 Client.prototype.deleteUser = function (userId) {
   assertDefined(arguments)
-  return this.del('/users/' + userId)
+  return this.del(['users', userId])
 }
 
 module.exports = Client

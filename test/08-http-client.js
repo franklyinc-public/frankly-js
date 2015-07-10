@@ -219,7 +219,7 @@ describe('frankly.Client [http]', function () {
 
       function success(user) {
         try {
-          assert.strictEqual(user.display_name, 'Luke Skywalker')
+          assert.strictEqual(user.displayName, 'Luke Skywalker')
           done()
         } catch (e) {
           failure(e)
@@ -233,7 +233,7 @@ describe('frankly.Client [http]', function () {
 
       admin.on('authenticate', function (session) {
         admin.updateUser(session.user.id, {
-          display_name: 'Luke Skywalker',
+          displayName: 'Luke Skywalker',
         })
           .then(success)
           .catch(failure)
