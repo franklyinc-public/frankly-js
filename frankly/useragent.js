@@ -23,4 +23,6 @@
  */
 'use strict'
 
-module.exports = 'Frankly-SDK/1.0.0 (JavaScript)'
+var version = require('./version.js')
+
+module.exports = 'Frankly-SDK/' + version + ' (JavaScript)'
