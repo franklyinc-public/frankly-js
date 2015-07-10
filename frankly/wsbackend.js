@@ -87,8 +87,7 @@ if (runtime.browser) {
 
 function makeURL(address, session) {
   var u = url.parse(address)
-  var t = undefined
-  var x = undefined
+  var c = undefined
 
   switch (u.protocol) {
   case 'ws:':
@@ -113,16 +112,10 @@ function makeURL(address, session) {
     // cookies we pass those values in the query string.
     u.pathname = '/'
     u.query = { }
+    c = Cookie.get(session.cookies, 'app-token')
 
-    t = Cookie.get(session.cookies, 'app-token')
-    x = Cookie.get(session.cookies, 'app-xsrf')
-
-    if (t !== undefined) {
-      u.query.token = t.value
-    }
-
-    if (x !== undefined) {
-      u.query.xsrf = x.value
+    if (c !== undefined) {
+      u.query.token = c.value
     }
   }
 

@@ -34,8 +34,6 @@ function HttpBackend(address, session) {
   var u = undefined
   var i = undefined
   var c = undefined
-  var t = undefined
-  var x = undefined
 
   EventEmitter.call(this)
   u = url.parse(address)
@@ -68,19 +66,11 @@ function HttpBackend(address, session) {
     // If cookies are available we're run as a client that was authenticated from
     // generating an identity token, all we need to do is set these cookies back
     // in each HTTP request submitted.
-    c = [ ]
-    t = Cookie.get(session.cookies, 'app-token')
-    x = Cookie.get(session.cookies, 'app-xsrf')
+    c = Cookie.get(session.cookies, 'app-token')
 
-    if (t !== undefined) {
-      c.push(Cookie.format(t))
+    if (c !== undefined) {
+      this.headers['cookie'] = [Cookie.format(c)]
     }
-
-    if (x !== undefined) {
-      c.push(Cookie.format(x))
-    }
-
-    this.headers['cookie'] = c
   }
 
   else {
