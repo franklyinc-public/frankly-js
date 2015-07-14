@@ -24,40 +24,40 @@
 'use strict'
 
 var matchBuild = [
-  { match: ['rooms', '*', 'messages', '*'],
+  { match: ['rooms', null, 'messages', null],
     build: buildRoomMessage },
 
-  { match: ['rooms', '*', 'participants', '*'],
+  { match: ['rooms', null, 'participants', null],
     build: buildRoomParticipant },
 
-  { match: ['rooms', '*', 'subscribers', '*'],
+  { match: ['rooms', null, 'subscribers', null],
     build: buildRoomSubscriber },
 
-  { match: ['rooms', '*', 'owners', '*'],
+  { match: ['rooms', null, 'owners', null],
     build: buildRoomOwner },
 
-  { match: ['rooms', '*', 'moderators', '*'],
+  { match: ['rooms', null, 'moderators', null],
     build: buildRoomModerator },
 
-  { match: ['rooms', '*', 'members', '*'],
+  { match: ['rooms', null, 'members', null],
     build: buildRoomMember },
 
-  { match: ['rooms', '*', 'announcers', '*'],
+  { match: ['rooms', null, 'announcers', null],
     build: buildRoomAnnouncer },
 
-  { match: ['rooms', '*', 'count'],
+  { match: ['rooms', null, 'count'],
     build: buildRoomCount },
 
-  { match: ['rooms', '*'],
+  { match: ['rooms', null],
     build: buildRoom },
 
-  { match: ['users', '*', 'ban'],
+  { match: ['users', null, 'ban'],
     build: buildUserBan },
 
-  { match: ['users', '*'],
+  { match: ['users', null],
     build: buildUser },
 
-  { match: ['apps', '*'],
+  { match: ['apps', null],
     build: buildApp },
 
   { match: ['session'],
@@ -65,7 +65,7 @@ var matchBuild = [
 ]
 
 function build(path, payload) {
-  var key = undefined
+  var key = null
 
   for (key in matchBuild) {
     key = matchBuild[key]
@@ -77,9 +77,9 @@ function build(path, payload) {
 }
 
 function match(path, refp) {
-  var i = undefined
-  var p = undefined
-  var r = undefined
+  var i = null
+  var p = null
+  var r = null
 
   if (path.length !== refp.length) {
     return false
@@ -89,7 +89,7 @@ function match(path, refp) {
     r = refp[i]
     p = path[i]
 
-    if (r === '*') {
+    if (r === null) {
       continue
     }
 

@@ -30,11 +30,11 @@ function RequestStore() {
 }
 
 RequestStore.prototype.store = function (packet, expire, resolve, reject) {
-  this.requests[packet.key()] = new Request(packet, expire, resolve, reject)
+  this.requests[packet.id] = new Request(packet, expire, resolve, reject)
 }
 
 RequestStore.prototype.load = function (packet) {
-  var key = packet.key()
+  var key = packet.id
   var map = this.requests
   var req = map[key]
 
@@ -89,21 +89,12 @@ RequestStore.prototype.cancel = function () {
   return exp
 }
 
-RequestStore.prototype.each = function(callback) {
+RequestStore.prototype.each = function (callback) {
   var key = undefined
-  var req = undefined
   var map = this.requests
 
-  this.requests = { }
-
   for (key in map) {
-    req = map[key]
-    try {
-      callback(req)
-    } catch (e) {
-      console.log(e)
-    }
-    this.requests[req.packet.key()] = req
+    callback(map[key])
   }
 }
 

@@ -177,7 +177,12 @@ Connection.prototype.request = function (type, path, params, payload) {
   var packet  = undefined
   var seed    = undefined
   var self    = this
+  var version = this.version
   var timeout = this.timeout.request
+
+  if (!self.running) {
+    throw new Error("submitting request before opening is not allowed")
+  }
 
   if (params === undefined) {
     params = null
@@ -203,13 +208,8 @@ Connection.prototype.request = function (type, path, params, payload) {
   )
 
   return new Promise(function (resolve, reject) {
-    if (!self.running) {
-      reject(Error.make(type, path, 400, "submitting request before opening is not allowed"))
-      return
-    }
-
     self.pending.store(packet, Date.now() + timeout, resolve, function (e) {
-      if (e.status === 401 && self.version === packet.version && self.backend !== undefined) {
+      if (e.status === 401 && self.version === version && self.backend !== undefined) {
         try {
           self.backend.close()
         } catch (e) {
@@ -220,7 +220,6 @@ Connection.prototype.request = function (type, path, params, payload) {
     })
 
     if (self.backend !== undefined) {
-      packet.version = self.version
       packet = packet.clone()
       packet.seed = 0
       self.backend.send(packet)
@@ -240,13 +239,9 @@ function start(self, version, args, delay, Backend) {
       return
     }
 
-    if (self.session !== undefined && self.session.seed !== session.seed) {
-      self.idseq = 1
-    }
-
     self.session = session
     self.emit('authenticate', session)
-    connect(self, version, args, delay, Backend)
+    connect(self, version, args, delay, session, Backend)
   }
 
   function failure(error) {
@@ -294,8 +289,7 @@ function start(self, version, args, delay, Backend) {
   }
 }
 
-function connect(self, version, args, delay, Backend) {
-  var session = self.session
+function connect(self, version, args, delay, session, Backend) {
   var backend = undefined
   var ready   = false
 
@@ -311,17 +305,14 @@ function connect(self, version, args, delay, Backend) {
       self.backend = backend
       self.emit('connect')
       self.pending.each(function (req) {
-        var packet = undefined
-
-        req.packet.version = self.version
-        packet = req.packet.clone()
+        var packet = req.packet.clone()
 
         if (packet.seed === 0) {
-          req.packet.seed = self.session.seed
-        }
-
-        if (packet.seed === self.session.seed) {
-          packet.seed = 0
+          req.packet.seed = session.seed
+        } else {
+          if (packet.seed === session.seed) {
+            packet.seed = 0
+          }
         }
 
         backend.send(packet)
@@ -335,7 +326,7 @@ function connect(self, version, args, delay, Backend) {
     if (!ready && version === self.version) {
       ready = true
       self.backend = undefined
-      self.emit('disconnect', { code: code, reason: reason })
+      self.emit('disconnect')
       start(self, version + 1, args, delay, Backend)
     }
   })
@@ -343,7 +334,7 @@ function connect(self, version, args, delay, Backend) {
   backend.on('packet', function (packet) {
     if (version === self.version) {
       if (packet.seed === 0) {
-        packet.seed = self.session.seed
+        packet.seed = session.seed
       }
 
       if (packet.id !== 0) {

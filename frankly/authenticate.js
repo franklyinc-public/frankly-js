@@ -81,6 +81,7 @@ function authenticate(address, generateIdentityToken, options) {
 
   function generateNonce() {
     options.path = '/auth/nonce'
+
     return new Promise(function (resolve, reject) {
       http.get(options)
         .then(function (res) {
@@ -91,7 +92,9 @@ function authenticate(address, generateIdentityToken, options) {
   }
 
   function generateSessionToken(identityToken) {
-    options.path = '/auth?identity_token=' + identityToken
+    options.path    = '/auth'
+    options.headers = { 'frankly-app-identity-token' : identityToken }
+
     return new Promise(function (resolve, reject) {
       http.get(options)
         .then(function (res) {
