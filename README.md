@@ -48,7 +48,7 @@ Usage (Browsers)
 The code is also published online and can be embeded directly into a web page:
 
 ```html
-<script src="https://cdn.franklychat.com/frankly-js/0/frankly.min.js"></script>
+<script src="https://cdn.franklychat.com/frankly-js/1/frankly.min.js"></script>
 <script>
   // Create a client that interacts with the Frankly API over WebSocket,
   // enables receiving real-time messages, automatic reconnections and
