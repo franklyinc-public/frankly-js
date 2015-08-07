@@ -43,9 +43,11 @@ function Connection(address, timeout) {
   this.session = undefined
   this.backend = undefined
   this.timer   = undefined
+  this.args    = undefined
   this.running = false
   this.idseq   = 1
   this.version = 1
+  this.backendClass = undefined
 }
 
 Connection.prototype = Object.create(EventEmitter.prototype)
@@ -108,6 +110,7 @@ Connection.prototype.open = function () {
     throw new Error("invalid argument count for open(function) or open(string, string)")
   }
 
+  this.args = args
   this.running = true
   this.timer = setInterval(function () { pulse(self) }, 1000)
   this.emit('open')
@@ -115,13 +118,15 @@ Connection.prototype.open = function () {
   switch (url.parse(this.address).protocol) {
   case 'ws:':
   case 'wss:':
-    start(this, this.version + 1, args, 1000, WsBackend)
+    this.backendClass = WsBackend
+    start(this, this.version + 1, 1000)
     break
 
   case 'http:':
   case 'https:':
   default:
-    start(this, this.version + 1, args, 1000, HttpBackend)
+    this.backendClass = HttpBackend
+    start(this, this.version + 1, 1000)
     break
   }
 }
@@ -154,7 +159,7 @@ Connection.prototype.close = function (hasError) {
 
   if (this.backend !== undefined) {
     try {
-      this.backend.close()
+      this.backend.close(1000, "")
     } catch (e) {
       console.log(e)
     } finally {
@@ -211,7 +216,7 @@ Connection.prototype.request = function (type, path, params, payload) {
     self.pending.store(packet, Date.now() + timeout, resolve, function (e) {
       if (e.status === 401 && self.version === version && self.backend !== undefined) {
         try {
-          self.backend.close()
+          self.backend.close(1000, "")
         } catch (e) {
           console.log(e)
         }
@@ -227,12 +232,26 @@ Connection.prototype.request = function (type, path, params, payload) {
   })
 }
 
-function start(self, version, args, delay, Backend) {
-  self.version++
+Connection.prototype.reconnect = function () {
+  this.disconnect()
+  start(this, this.version + 1, 1000)
+}
 
-  if (version !== self.version) {
+Connection.prototype.disconnect = function () {
+  if (this.backend !== undefined) {
+    this.backend.close(1000, "")
+    this.backend = undefined
+  }
+}
+
+function start(self, version, delay) {
+  var args = self.args
+
+  if (version !== (self.version + 1)) {
     return
   }
+
+  self.version = version
 
   function success(session) {
     if (version !== self.version) {
@@ -241,7 +260,7 @@ function start(self, version, args, delay, Backend) {
 
     self.session = session
     self.emit('authenticate', session)
-    connect(self, version, args, delay, session, Backend)
+    connect(self, version, delay, session)
   }
 
   function failure(error) {
@@ -251,14 +270,6 @@ function start(self, version, args, delay, Backend) {
 
     error.operation = 'authenticate'
     self.emit('error', error)
-
-    switch (error.status) {
-    case 400:
-    case 401:
-    case 403:
-      self.close(true)
-      return
-    }
 
     if (delay === undefined) {
       delay = 1000
@@ -271,7 +282,7 @@ function start(self, version, args, delay, Backend) {
     }
 
     setTimeout(function () {
-      start(self, version + 1, args, delay, Backend)
+      start(self, version + 1, delay)
     }, delay)
   }
 
@@ -289,19 +300,20 @@ function start(self, version, args, delay, Backend) {
   }
 }
 
-function connect(self, version, args, delay, session, Backend) {
+function connect(self, version, delay, session) {
   var backend = undefined
-  var ready   = false
+  var timeout = undefined
 
   if (version !== self.version) {
     return
   }
 
-  backend = new Backend(self.address, session)
+  backend = new self.backendClass(self.address, session)
 
   backend.on('open', function () {
-    if (!ready && version === self.version) {
-      ready = true
+    clearTimeout(timeout)
+
+    if (version === self.version) {
       self.backend = backend
       self.emit('connect')
       self.pending.each(function (req) {
@@ -318,16 +330,19 @@ function connect(self, version, args, delay, session, Backend) {
         backend.send(packet)
       })
     } else {
-      backend.close()
+      backend.close(1000, "")
     }
   })
 
   backend.on('close', function (code, reason) {
-    if (!ready && version === self.version) {
-      ready = true
+    clearTimeout(timeout)
+
+    if (version === self.version) {
       self.backend = undefined
-      self.emit('disconnect')
-      start(self, version + 1, args, delay, Backend)
+      self.emit('disconnect', {
+        reconnectAfter: delay
+      })
+      start(self, version + 1, delay)
     }
   })
 
@@ -345,12 +360,11 @@ function connect(self, version, args, delay, session, Backend) {
     }
   })
 
-  setTimeout(function() {
-    if (!ready && version === self.version) {
-      ready = true
+  timeout = setTimeout(function() {
+    if (version === self.version) {
       self.emit('error', Error.make('connect', '/', 408, "connection timed out"))
-      backend.close()
-      start(self, version + 1, args, delay, Backend)
+      start(self, version + 1, delay)
+      backend.close(1000, "")
     }
   }, self.timeout.connect)
 }

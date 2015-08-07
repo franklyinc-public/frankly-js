@@ -39,12 +39,12 @@ function WsBackend(address, session) {
     var packet = undefined
 
     if (!flags.binary) {
-      this.close(1003, "non-binary frame received from the server")
+      this.close(1000, "non-binary frame received from the server")
       return
     }
 
     if (flags.masked) {
-      this.close(1002, "masked frame received from the server")
+      this.close(1000, "masked frame received from the server")
       return
     }
 
@@ -61,7 +61,7 @@ function WsBackend(address, session) {
       packet.params  = normalize(packet.params)
       packet.payload = normalize(packet.payload)
     } catch (e) {
-      this.close(1003, "failed to decode packet received from server")
+      this.close(1000, "failed to decode packet received from server")
       return
     }
 

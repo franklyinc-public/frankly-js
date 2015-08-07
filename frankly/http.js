@@ -88,6 +88,8 @@ function request(options, data) {
     options.headers['cookie'] = cookies
   }
 
+  options.withCredentials = true;
+
   if (data === undefined) {
     data = ''
     options.headers['content-length'] = 0
@@ -105,7 +107,7 @@ function request(options, data) {
       // based on https://github.com/substack/http-browserify/pull/80
       if (req.setTimeout === undefined) {
         req.xhr.ontimeout = req.emit.bind(req, 'timeout')
-        req.xhr.timeout   = msecs
+        req.xhr.timeout   = options.timeout
       } else {
         req.setTimeout(options.timeout)
       }
@@ -113,13 +115,21 @@ function request(options, data) {
 
     req.on('response', function (res) {
       var content = undefined
-      var cookies = res.headers['set-cookie']
+      var cookies
 
-      if (cookies === undefined) {
+      try {
+
+        cookies = res.headers['set-cookie']
+
+        if (cookies === undefined) {
+          cookies = [ ]
+        }
+
+        delete res.headers['set-cookie']
+      } catch (e) {
         cookies = [ ]
       }
 
-      delete res.headers['set-cookie']
       res.cookies = Cookie.parse(cookies)
 
       res.on('data', function (chunk) {

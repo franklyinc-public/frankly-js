@@ -31,7 +31,7 @@ function WS(url, proto) {
   EventEmitter.call(this)
 
   this.ws = new WebSocket(url, proto)
-  this.ws.binaryType = 'arrayBuffer'
+  this.ws.binaryType = 'arraybuffer'
 
   this.ws.onopen = function (event) {
     self.emit('open', event)
@@ -64,7 +64,11 @@ WS.prototype.constructor = WS
 WS.prototype.ws = undefined
 
 WS.prototype.close = function (code, reason) {
+  this.ws.onopen = undefined
+  this.ws.onclose = undefined
+  this.ws.onmessage = undefined
   this.ws.close(code, reason)
+  this.emit('close', { code: code, reason: reason })
 }
 
 WS.prototype.send = function (data, flags) {
