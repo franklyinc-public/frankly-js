@@ -106,11 +106,19 @@ function makeURL(address, session) {
     throw new Error("websocket connection cannot be establish to " + address)
   }
 
-  if (session.xsrf) {
+  if (session.identityToken) {
+    // On safari cross-domain requests and iframes don't send cookies, for this
+    // browser we establish the websocket connection by passing the identity token
+    // directly with the handshake.
+    u.pathname = session.path
+    u.query = { identity_token: session.identityToken }
+  }
+
+  else if (session.xsrf) {
     // If the xsrf value is set on the session then we're run from a browser
     // or something simulating it, we set the prefix to the path cookies should
     // have been set for so they get sent with the HTTP handshake.
-    u.pathname = '/a/' + session.app.id + '/u/' + session.user.id + '/s/' + session.seed
+    u.pathname = session.path + '/a/' + session.app.id + '/u/' + session.user.id + '/s/' + session.seed
     u.query = { xsrf: session.xsrf }
   }
 
@@ -118,7 +126,7 @@ function makeURL(address, session) {
     // If cookies are available we're being run as a client that was authenticated
     // from generating an identity token, because websocket libraries don't support
     // cookies we pass those values in the query string.
-    u.pathname = '/'
+    u.pathname = session.path + '/'
     u.query = { }
     c = Cookie.get(session.cookies, 'app-token')
 
@@ -132,19 +140,19 @@ function makeURL(address, session) {
     // is providing the app key and secret so no pre-authentication was done.
     // We simply set all the required query parameters so that HTTP handshake
     // will pass authentication.
-    u.pathname = '/'
+    u.pathname = session.path + '/'
     u.query = { }
 
-    if (session.key !== undefined) {
-      u.query.app_key = session.key
+    if (session.app.key !== undefined) {
+      u.query.app_key = session.app.key
     }
 
-    if (session.secret !== undefined) {
-      u.query.app_secret = session.secret
+    if (session.app.secret !== undefined) {
+      u.query.app_secret = session.app.secret
     }
 
-    if (session.user !== undefined) {
-      u.query.app_user_id = session.user
+    if (session.user.id !== undefined) {
+      u.query.app_user_id = session.user.id
     }
 
     if (session.role !== undefined) {

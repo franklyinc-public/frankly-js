@@ -64,10 +64,21 @@ WS.prototype.constructor = WS
 WS.prototype.ws = undefined
 
 WS.prototype.close = function (code, reason) {
-  this.ws.onopen = undefined
-  this.ws.onclose = undefined
-  this.ws.onmessage = undefined
-  this.ws.close(code, reason)
+  if (this.ws === undefined) {
+    return
+  }
+
+  try {
+    this.ws.onopen = undefined
+    this.ws.onclose = undefined
+    this.ws.onmessage = undefined
+    this.ws.close(code, reason)
+  } catch (e) {
+    console.log(e)
+  } finally {
+    this.ws = undefined
+  }
+
   this.emit('close', { code: code, reason: reason })
 }
 

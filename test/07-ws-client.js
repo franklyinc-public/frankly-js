@@ -145,12 +145,12 @@ describe('frankly.Client [ws]', function () {
       })
 
       client.on('error', done)
-      client.open(appKey, appSecret)
+      client.open(jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
     })
   })
 
   describe('message', function () {
-    it("create a room a message on Frankly server running at " + appHost, function (done) {
+    it("create a room and a message on Frankly server running at " + appHost, function (done) {
       var client = new Client(appHost)
 
       client.on('open', function (session) {
@@ -209,7 +209,7 @@ describe('frankly.Client [ws]', function () {
       })
 
       client.on('error', done)
-      client.open(appKey, appSecret)
+      client.open(jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
     })
   })
 
@@ -281,6 +281,7 @@ describe('frankly.Client [ws]', function () {
 
       function success(user) {
         try {
+
           assert.strictEqual(user.displayName, 'Luke Skywalker')
           done()
         } catch (e) {

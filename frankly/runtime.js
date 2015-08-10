@@ -24,5 +24,5 @@
 'use strict'
 
 module.exports = {
-  browser: false,
+  browser: undefined
 }

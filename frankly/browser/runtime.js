@@ -23,6 +23,14 @@
  */
 'use strict'
 
+function detectBrowser() {
+  if (/Safari/.test(navigator.userAgent)) {
+    return 'safari'
+  }
+
+  return 'unknown'
+}
+
 module.exports = {
-  browser: true,
+  browser: detectBrowser(),
 }

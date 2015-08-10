@@ -48,17 +48,22 @@ function HttpBackend(address, session) {
   }
 
   this.closed   = false
-  this.path     = ''
+  this.path     = session.path
   this.headers  = { }
   this.host     = u.hostname
   this.port     = u.port
   this.protocol = u.protocol
 
-  if (session.xsrf) {
+  if (session.identityToken) {
+    // This authentication scheme is not supported for http requests.
+    throw new Error("HTTP requests don't support authentication through an identity token")
+  }
+
+  else if (session.xsrf) {
     // If the xsrf value is set on the session then we're run from a browser
     // or something simulating it, we set the prefix to the path cookies should
     // have been set for so they get sent with HTTP requests.
-    this.path = '/a/' + session.app.id + '/u/' + session.user.id + '/s/' + session.seed
+    this.path += '/a/' + session.app.id + '/u/' + session.user.id + '/s/' + session.seed
     this.headers['frankly-app-xsrf'] = session.xsrf
   }
 
@@ -78,16 +83,16 @@ function HttpBackend(address, session) {
     // is providing the app key and secret so no pre-authentication was done.
     // We simply set all the required headers so that HTTP requests can be
     // authenticated individually.
-    if (session.key !== undefined) {
-      this.headers['frankly-app-key'] = session.key
+    if (session.app.key !== undefined) {
+      this.headers['frankly-app-key'] = session.app.key
     }
 
-    if (session.secret !== undefined) {
-      this.headers['frankly-app-secret'] = session.secret
+    if (session.app.secret !== undefined) {
+      this.headers['frankly-app-secret'] = session.app.secret
     }
 
-    if (session.user !== undefined) {
-      this.headers['frankly-app-user-id'] = session.user
+    if (session.user.id !== undefined) {
+      this.headers['frankly-app-user-id'] = session.user.id
     }
 
     if (session.role !== undefined) {

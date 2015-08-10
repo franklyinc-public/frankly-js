@@ -110,9 +110,9 @@ Connection.prototype.open = function () {
     throw new Error("invalid argument count for open(function) or open(string, string)")
   }
 
-  this.args = args
+  this.args    = args
   this.running = true
-  this.timer = setInterval(function () { pulse(self) }, 1000)
+  this.timer   = setInterval(function () { pulse(self) }, 1000)
   this.emit('open')
 
   switch (url.parse(this.address).protocol) {
@@ -215,11 +215,7 @@ Connection.prototype.request = function (type, path, params, payload) {
   return new Promise(function (resolve, reject) {
     self.pending.store(packet, Date.now() + timeout, resolve, function (e) {
       if (e.status === 401 && self.version === version && self.backend !== undefined) {
-        try {
-          self.backend.close(1000, "")
-        } catch (e) {
-          console.log(e)
-        }
+        self.backend.close(1000, "")
       }
       reject(e)
     })
@@ -258,8 +254,19 @@ function start(self, version, delay) {
       return
     }
 
-    self.session = session
-    self.emit('authenticate', session)
+    // If an identity token is present in the session object we're probably authenticating
+    // on safari and we can't tell if authentication was succesful yet.
+    // We'll broadcast the 'authenticate' event after fetching the session on the established
+    // connection.
+    if (session.identityToken === undefined) {
+      self.session = session
+      self.emit('authenticate', session)
+    }
+
+    if (version !== self.version) {
+      return
+    }
+
     connect(self, version, delay, session)
   }
 
@@ -270,6 +277,10 @@ function start(self, version, delay) {
 
     error.operation = 'authenticate'
     self.emit('error', error)
+
+    if (version !== self.version) {
+      return
+    }
 
     if (delay === undefined) {
       delay = 1000
@@ -288,16 +299,46 @@ function start(self, version, delay) {
 
   if (args.generateIdentityToken === undefined) {
     success({
-      key    : args.appKey,
-      secret : args.appSecret,
-      user   : args.user,
-      role   : args.role,
+      app: {
+        id     : parseInt(args.appKey.split(args.appKey.indexOf('-'))[0]),
+        key    : args.appKey,
+        secret : args.appSecret,
+      },
+      user: {
+        id: args.user,
+      },
+      role: args.role,
+      path: '',
     })
   } else {
     authenticate(self.address, args.generateIdentityToken, { timeout: self.timeout.request })
       .then(success)
       .catch(failure)
   }
+}
+
+function publish(self, version) {
+  var session = self.session
+  var pending = self.pending
+  var backend = self.backend
+
+  if (self.version !== version) {
+    return
+  }
+
+  pending.each(function (req) {
+    var packet = req.packet.clone()
+
+    if (packet.seed === 0) {
+      req.packet.seed = session.seed
+    }
+
+    else if (packet.seed === session.seed) {
+      packet.seed = 0
+    }
+
+    backend.send(packet)
+  })
 }
 
 function connect(self, version, delay, session) {
@@ -310,62 +351,97 @@ function connect(self, version, delay, session) {
 
   backend = new self.backendClass(self.address, session)
 
-  backend.on('open', function () {
-    clearTimeout(timeout)
+  if (session.identityToken === undefined) {
+    backend.on('open', function () {
+      clearTimeout(timeout)
 
-    if (version === self.version) {
+      if (version !== self.version) {
+        backend.close(1000, "")
+        return
+      }
+
       self.backend = backend
       self.emit('connect')
-      self.pending.each(function (req) {
-        var packet = req.packet.clone()
+      publish(self, version)
+      return
+    })
+  } else {
+    backend.on('open', function () {
+      clearTimeout(timeout)
 
-        if (packet.seed === 0) {
-          req.packet.seed = session.seed
-        } else {
-          if (packet.seed === session.seed) {
-            packet.seed = 0
+      if (version !== self.version) {
+        backend.close(1000, "")
+        return
+      }
+
+      // When an identity token was set on the session object authentication was
+      // performed during the websocket handshake, to emulate the behavior of the
+      // default authentication mechanism we first fetch the current session so
+      // it can be published as argument to the 'authenticate' event.
+      self.backend = backend
+      self.request(0, ['session'])
+        .then(function (session) {
+          if (self.version !== version) {
+            return
           }
-        }
 
-        backend.send(packet)
-      })
-    } else {
-      backend.close(1000, "")
-    }
-  })
+          self.session = session
+          self.emit('authenticate', session)
+
+          if (self.version !== version) {
+            return
+          }
+
+          self.emit('connect')
+          publish(self, version)
+        })
+        .catch(function (error) {
+          if (self.version !== version) {
+            return
+          }
+
+          self.emit('error', error)
+          start(self, version + 1, delay)
+        })
+    })
+  }
 
   backend.on('close', function (code, reason) {
     clearTimeout(timeout)
 
-    if (version === self.version) {
-      self.backend = undefined
-      self.emit('disconnect', {
-        reconnectAfter: delay
-      })
-      start(self, version + 1, delay)
+    if (version !== self.version) {
+      return
     }
+
+    self.backend = undefined
+    self.emit('disconnect', { reconnectAfter: delay })
+    start(self, version + 1, delay)
   })
 
   backend.on('packet', function (packet) {
-    if (version === self.version) {
-      if (packet.seed === 0) {
-        packet.seed = session.seed
-      }
+    if (version !== self.version) {
+      return
+    }
 
-      if (packet.id !== 0) {
-        handleResponse(self, packet)
-      } else {
-        handleSignal(self, packet)
-      }
+    if (packet.seed === 0) {
+      packet.seed = session.seed
+    }
+
+    if (packet.id !== 0) {
+      handleResponse(self, packet)
+    } else {
+      handleSignal(self, packet)
     }
   })
 
   timeout = setTimeout(function() {
-    if (version === self.version) {
-      self.emit('error', Error.make('connect', '/', 408, "connection timed out"))
-      start(self, version + 1, delay)
-      backend.close(1000, "")
+    if (version !== self.version) {
+      return
     }
+
+    self.emit('error', Error.make('connect', '/', 408, "connection timed out"))
+    start(self, version + 1, delay)
+    backend.close(1000, "")
   }, self.timeout.connect)
 }
 

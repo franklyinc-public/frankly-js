@@ -27,6 +27,8 @@ var Promise = require('promise')
 var url     = require('url')
 var Error   = require('./error.js')
 var http    = require('./http.js')
+var runtime = require('./runtime.js')
+var auth    = undefined
 
 function errorHandler(operation, path, reject) {
   return function (err) {
@@ -35,6 +37,79 @@ function errorHandler(operation, path, reject) {
     }
     reject(err)
   }
+}
+
+function safari(options, generateIdentityToken) {
+  function generateNonce() {
+    options.path = '/auth/nonce'
+
+    return new Promise(function (resolve, reject) {
+      http.get(options)
+        .then(function (res) {
+          resolve(res.content)
+        })
+        .catch(errorHandler('read', options.path, reject))
+    })
+  }
+
+  return new Promise(function (resolve, reject) {
+    generateNonce()
+      .then(generateIdentityToken)
+      .then(function(identityToken) {
+        resolve({ identityToken: identityToken, path: '/auth' })
+      })
+      .catch(reject)
+  })
+}
+
+function common(options, generateIdentityToken) {
+  function generateNonce() {
+    options.path = '/auth/nonce'
+
+    return new Promise(function (resolve, reject) {
+      http.get(options)
+        .then(function (res) {
+          resolve(res.content)
+        })
+        .catch(errorHandler('read', options.path, reject))
+    })
+  }
+
+  function generateSessionToken(identityToken) {
+    options.path    = '/auth'
+    options.headers = { 'frankly-app-identity-token' : identityToken }
+
+    return new Promise(function (resolve, reject) {
+      http.get(options)
+        .then(function (res) {
+          var session = res.content
+          session.headers = res.headers
+          session.cookies = res.cookies
+          session.path = ''
+          session.xsrf = res.headers['frankly-app-xsrf']
+          resolve(session)
+        })
+        .catch(errorHandler('read', options.path, reject))
+    })
+  }
+
+  return new Promise(function (resolve, reject) {
+    generateNonce()
+      .then(generateIdentityToken)
+      .then(generateSessionToken)
+      .then(resolve)
+      .catch(reject)
+  })
+}
+
+switch (runtime.browser) {
+case 'safari':
+  auth = safari
+  break
+
+default:
+  auth = common
+  break
 }
 
 function authenticate(address, generateIdentityToken, options) {
@@ -78,43 +153,7 @@ function authenticate(address, generateIdentityToken, options) {
   options.protocol = u.protocol
   options.host = u.hostname
   options.port = u.port
-
-  function generateNonce() {
-    options.path = '/auth/nonce'
-
-    return new Promise(function (resolve, reject) {
-      http.get(options)
-        .then(function (res) {
-          resolve(res.content)
-        })
-        .catch(errorHandler('read', options.path, reject))
-    })
-  }
-
-  function generateSessionToken(identityToken) {
-    options.path    = '/auth'
-    options.headers = { 'frankly-app-identity-token' : identityToken }
-
-    return new Promise(function (resolve, reject) {
-      http.get(options)
-        .then(function (res) {
-          var session = res.content
-          session.headers = res.headers
-          session.cookies = res.cookies
-          session.xsrf = res.headers['frankly-app-xsrf']
-          resolve(session)
-        })
-        .catch(errorHandler('read', options.path, reject))
-    })
-  }
-
-  return new Promise(function (resolve, reject) {
-    generateNonce()
-      .then(generateIdentityToken)
-      .then(generateSessionToken)
-      .then(resolve)
-      .catch(reject)
-  })
+  return auth(options, generateIdentityToken)
 }
 
 module.exports = authenticate
