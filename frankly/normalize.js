@@ -27,15 +27,6 @@ function normalize(object) {
   var k = undefined
   var x = undefined
 
-  if (typeof object === 'string') {
-    var date = new Date(object)
-    if (isNaN(date.getTime())) {
-      return object
-    } else {
-      return date
-    }
-  }
-
   if (typeof object !== 'object') {
     return object
   }
@@ -54,7 +45,17 @@ function normalize(object) {
   x = { }
 
   for (k in object) {
-    x[camelCase(k)] = normalize(object[k])
+    var v = object[k]
+
+    if (k.indexOf('_on') === (k.length - 3) && (typeof v === 'string')) {
+        var date = new Date(v)
+        if (!isNaN(date.getTime())) {
+         x[camelCase(k)] = date
+          continue
+      }
+    }
+
+    x[camelCase(k)] = normalize(v)
   }
 
   return x

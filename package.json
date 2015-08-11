@@ -1,6 +1,6 @@
 {
   "name": "frankly-js",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "JavaScript library providing building blocks to write applications using the Frankly API.",
   "main": "index.js",
   "directories": {
