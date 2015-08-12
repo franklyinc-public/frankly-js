@@ -39,7 +39,7 @@ function errorHandler(operation, path, reject) {
   }
 }
 
-function safari(options, generateIdentityToken) {
+function nocookie(options, generateIdentityToken) {
   function generateNonce() {
     options.path = '/auth/nonce'
 
@@ -103,8 +103,9 @@ function common(options, generateIdentityToken) {
 }
 
 switch (runtime.browser) {
+case 'ie10':
 case 'safari':
-  auth = safari
+  auth = nocookie
   break
 
 default:

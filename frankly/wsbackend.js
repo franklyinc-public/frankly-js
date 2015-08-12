@@ -26,7 +26,7 @@
 var WebSocket   = require('ws')
 var qs          = require('querystring')
 var url         = require('url')
-var Cookie      = require('./Cookie.js')
+var Cookie      = require('./cookie.js')
 var Packet      = require('./packet.js')
 var runtime     = require('./runtime.js')
 var normalize   = require('./normalize.js')
@@ -66,7 +66,31 @@ function WsBackend(address, session) {
     }
 
     this.emit('packet', packet)
+
+    this.mostRecentCall = Date.now()
+    this.expectActivity = false
   })
+
+  this.on('close', function (e) {
+    clearInterval(this.interval)
+  })
+
+  function verifyConnection(waitPeriod) {
+    var currentTime = Date.now()
+
+    if(this.expectActivity) {
+      //Signify connection is broken
+      this.close(1000, "")
+
+    } else if (currentTime - this.mostRecentCall > waitPeriod) {
+        //Make call to the app server - Ping
+        this.send(new Packet(0, 0, 1234567899, ["ping"]))
+
+        this.expectActivity = true
+    }
+  }
+
+  this.interval = setInterval(verifyConnection.bind(this, 5000), 1000)
 }
 
 WsBackend.prototype = Object.create(WebSocket.prototype)
@@ -107,7 +131,7 @@ function makeURL(address, session) {
   }
 
   if (session.identityToken) {
-    // On safari cross-domain requests and iframes don't send cookies, for this
+    // On safari or ie10 cross-domain requests and iframes don't send cookies, for this
     // browser we establish the websocket connection by passing the identity token
     // directly with the handshake.
     u.pathname = session.path

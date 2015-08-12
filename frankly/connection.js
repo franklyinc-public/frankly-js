@@ -255,7 +255,7 @@ function start(self, version, delay) {
     }
 
     // If an identity token is present in the session object we're probably authenticating
-    // on safari and we can't tell if authentication was succesful yet.
+    // on safari or ie10 and we can't tell if authentication was succesful yet.
     // We'll broadcast the 'authenticate' event after fetching the session on the established
     // connection.
     if (session.identityToken === undefined) {
