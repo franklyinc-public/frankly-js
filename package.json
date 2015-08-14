@@ -1,6 +1,6 @@
 {
   "name": "frankly-js",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "JavaScript library providing building blocks to write applications using the Frankly API.",
   "main": "index.js",
   "directories": {
@@ -45,7 +45,7 @@
     "minami": "^1.1.0",
     "mocha": "^2.2.5",
     "s3": "^4.4.0",
-    "uglify-js": "^2.4.23"
+    "uglify-js": "^2.4.24"
   },
   "scripts": {
     "test": "mocha --timeout 10000"

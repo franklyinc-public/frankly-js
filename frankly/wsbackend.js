@@ -84,7 +84,7 @@ function WsBackend(address, session) {
 
     } else if (currentTime - this.mostRecentCall > waitPeriod) {
         //Make call to the app server - Ping
-        this.send(new Packet(0, 0, 1234567899, ["ping"]))
+        this.send(new Packet(0, 0, 2147483647, ["ping"], {}, {}))
 
         this.expectActivity = true
     }
