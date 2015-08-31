@@ -95,8 +95,25 @@ The code is also published online and can be embeded directly into a web page:
 </script>
 ```
 
+Formatting
+-------------
+Follows https://github.com/feross/standard
+```
+$ npm install standard -g
+$ standard --format
+```
+
+Building
+-------------
+
+To build the JS SDK, determine your version (as `{$version}`), and run 
+
+```
+$ ./scripts/build ./dist {$version}
+```
+
 Testing
-=======
+-------------
 
 `mocha` is required to run the test suite, the following environment variables
 also have to be set:
@@ -113,6 +130,12 @@ $ npm test
 
 Documentation
 -------------
+
+To create documentation for the JS SDK, make sure you have [jsdoc](https://github.com/jsdoc3/jsdoc) installed and run 
+
+```
+$ ./scripts/gendoc ./doc
+```
 
 The reference documentation can be found at http://franklyinc.github.io/APIReference-JavaScript.html
 

@@ -23,8 +23,10 @@
  */
 'use strict'
 
-function normalize(object) {
-  var k = undefined
+var _endsWith = require('lodash/string/endsWith')
+var _forEach = require('lodash/collection/forEach')
+
+function normalize (object) {
   var x = undefined
 
   if (typeof object !== 'object') {
@@ -36,40 +38,32 @@ function normalize(object) {
   }
 
   if (object instanceof Array) {
-    for (k in object) {
-      object[k] = normalize(object[k])
-    }
+    _forEach(object, function (v, k) {
+      object[k] = normalize(v)
+    })
     return object
   }
 
   x = { }
 
-  for (k in object) {
-    var v = object[k]
+  _forEach(object, function (v, k) {
+    var date = undefined
 
-    if (k.indexOf('_on') === (k.length - 3) && (typeof v === 'string')) {
-        var date = new Date(v)
-        if (!isNaN(date.getTime())) {
-         x[camelCase(k)] = date
-          continue
-      }
+    if (_endsWith(k, '_on') && !isNaN((date = new Date(v)).getTime())) {
+      x[camelCase(k)] = date
+    } else {
+      x[camelCase(k)] = normalize(v)
     }
-
-    x[camelCase(k)] = normalize(v)
-  }
+  })
 
   return x
 }
 
-function camelCase(k) {
+function camelCase (k) {
   var s = ''
-  var i = undefined
-  var c = undefined
   var x = false
 
-  for (i = 0; i != k.length; i++) {
-    c = k.charAt(i)
-
+  _forEach(k, function (c) {
     if (c === '_') {
       x = true
     } else if (x) {
@@ -78,7 +72,7 @@ function camelCase(k) {
     } else {
       s += c
     }
-  }
+  })
 
   return s
 }

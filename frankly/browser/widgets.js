@@ -23,9 +23,11 @@
  */
 'use strict'
 
+var _forEach = require('lodash/collection/forEach')
+var _find = require('lodash/collection/find')
 var Promise = require('promise')
 
-var configs = [ ]
+var configs = []
 
 var methods = {
   configuration: function (request, source, origin) {
@@ -62,16 +64,16 @@ var methods = {
       var config = getConfigByWindowOrDefault(source)
 
       if (config === undefined) {
-        reject(new Error("No configuration was found for the requesting window"))
+        reject(new Error('No configuration was found for the requesting window'))
         return
       }
 
       if (config.onAuthenticationRequest === undefined) {
-        reject(new Error("No authentication method available for the requesting window"))
+        reject(new Error('No authentication method available for the requesting window'))
         return
       }
 
-      console.log(request, request.data);
+      console.log(request, request.data)
 
       config.onAuthenticationRequest(request.data)
         .then(resolve)
@@ -80,124 +82,101 @@ var methods = {
   },
 }
 
-function success(result, request, source, origin) {
+function success (result, request, source, origin) {
   source.postMessage({
-    protocol : request.protocol,
-    id       : request.id,
-    method   : request.method,
-    type     : 'response',
-    ok       : true,
-    time     : new Date,
-    data     : result,
+    protocol: request.protocol,
+    id: request.id,
+    method: request.method,
+    type: 'response',
+    ok: true,
+    time: new Date,
+    data: result,
   }, origin)
 }
 
-function failure(error, request, source, origin) {
+function failure (error, request, source, origin) {
   try {
     error = {
-      name    : error.name,
-      message : error.message,
+      name: error.name,
+      message: error.message,
     }
   } catch (e) {
     console.log(error)
     error = {
-      name    : e.name,
-      message : e.message,
+      name: e.name,
+      message: e.message,
     }
   }
 
   source.postMessage({
     protocol: request.protocol,
-    id      : request.id,
-    method  : request.method,
-    type    : 'response',
-    ok      : false,
-    time    : new Date,
-    data    : error,
+    id: request.id,
+    method: request.method,
+    type: 'response',
+    ok: false,
+    time: new Date,
+    data: error,
   }, origin)
 }
 
-function copyConfig(config) {
-  var cfg = config instanceof Array ? [ ] : { }
-  var key = undefined
-  var val = undefined
+function copyConfig (config) {
+  var cfg = config instanceof Array ? [] : { }
 
-  for (key in config) {
-    val = config[key]
-
-    if (val === null) {
-      cfg[key] = null
-      continue
+  _forEach(config, function (val, key) {
+    if (val !== null && typeof val === 'object') {
+      throw new TypeError('unexpected object in configuration')
+    } else {
+      cfg[key] = val
     }
-
-    if (typeof val === 'object') {
-      throw new TypeError("unexpected object in configuration")
-    }
-
-    cfg[key] = val
-  }
+  })
 
   return cfg
 }
 
-function cleanConfig(config) {
-  var cfg = config instanceof Array ? [ ] : { }
-  var key = undefined
-  var val = undefined
+function cleanConfig (config) {
+  var cfg = config instanceof Array ? [] : { }
 
-  for (key in config) {
-    val = config[key]
-
+  _forEach(config, function (val, key) {
     if (val === null) {
       cfg[key] = val
-      continue
+    } else {
+      switch (typeof val) {
+        case 'undefined':
+        case 'boolean':
+        case 'number':
+        case 'string':
+        case 'symbol':
+          cfg[key] = val
+          break
+        case 'function':
+          cfg[key] = true
+          break
+      }
     }
-
-    switch (typeof val) {
-    case 'undefined':
-    case 'boolean':
-    case 'number':
-    case 'string':
-    case 'symbol':
-      cfg[key] = val
-      break
-    case 'function':
-      cfg[key] = true
-      break
-    }
-  }
+  })
 
   return cfg
 }
 
-function notifyConfigReady(config) {
+function notifyConfigReady (config) {
   var pending = config.pending
-  var key = undefined
 
   if (pending !== undefined) {
-    for (key in pending) {
+    _forEach(pending, function (ready) {
       try {
-        pending[key](config)
+        ready(config)
       } catch (e) {
         console.log(e)
       }
-    }
+    })
   }
 }
 
-function getConfigByWindow(window) {
-  var index = undefined
-
-  for (index in configs) {
-    if (configs[index].window === window) {
-      return configs[index]
-    }
-  }
-
-  return undefined
+function getConfigByWindow (window) {
+  return _find(configs, 'window', window)
 }
 
-function getConfigByWindowOrDefault(window) {
+function getConfigByWindowOrDefault (window) {
   var config = getConfigByWindow(window)
 
   if (config === undefined) {
@@ -209,9 +188,9 @@ function getConfigByWindowOrDefault(window) {
 
 window.addEventListener('message', function (event) {
   var request = event.data
-  var source  = event.source
-  var origin  = event.origin
-  var method  = undefined
+  var source = event.source
+  var origin = event.origin
+  var method = undefined
 
   if (request === undefined) {
     console.log('frankly widgets received an invalid event (undefined request)')
@@ -245,16 +224,16 @@ window.addEventListener('message', function (event) {
   }
 
   method(request, source, origin)
-      .then(function (result) { success(result, request, source, origin) })
-      .catch(function (error) { failure(error, request, source, origin) })
+    .then(function (result) { success(result, request, source, origin) })
+    .catch(function (error) { failure(error, request, source, origin) })
 })
 
 module.exports = {
   init: function (options) {
-    var element  = undefined
+    var element = undefined
     var previous = undefined
-    var key      = undefined
-    var pending  = undefined
+    var key = undefined
+    var pending = undefined
 
     if (options === undefined) {
       options = { }
@@ -269,15 +248,15 @@ module.exports = {
       element = document.getElementById(options.id)
 
       if (element === undefined) {
-        throw new Error("no element with id " + options.id + " could be found")
+        throw new Error('no element with id ' + options.id + ' could be found')
       }
 
       if (element.contentWindow === undefined) {
-        throw new Error("the element with id " + options.id + " is not an iframe")
+        throw new Error('the element with id ' + options.id + ' is not an iframe')
       }
 
       if (getConfigByWindow(undefined) !== undefined) {
-        throw new Error("the default configuration has already been set, no more calls to frankly.widgets.init can be made")
+        throw new Error('the default configuration has already been set, no more calls to frankly.widgets.init can be made')
       }
 
       options.window = element.contentWindow
@@ -298,12 +277,12 @@ module.exports = {
       configs.push(options)
     } else {
       if (previous.ready) {
-        throw new Error("multiple calls to frankly.widgets.init for the same configuration were detected")
+        throw new Error('multiple calls to frankly.widgets.init for the same configuration were detected')
       }
 
-      for (key in options) {
-        previous[key] = options[key]
-      }
+      _forEach(options, function (val, key) {
+        previous[key] = val
+      })
 
       options = previous
     }
@@ -317,9 +296,7 @@ module.exports = {
     } else {
       // If the default configuration is being set we notify pending
       // windows for all configurations.
-      for (key in configs) {
-        notifyConfigReady(configs[key])
-      }
+      _forEach(configs, notifyConfigReady)
     }
   }
 }

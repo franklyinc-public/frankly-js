@@ -23,8 +23,8 @@
  */
 'use strict'
 
-var Promise  = require('promise')
-var reqid    = 1
+var Promise = require('promise')
+var reqid = 1
 var requests = { }
 
 window.addEventListener('message', function (event) {
@@ -40,7 +40,7 @@ window.addEventListener('message', function (event) {
   }
 
   if (res.protocol !== req.protocol) {
-    console.log("frankly.parent received a response with an invalid protocol", res)
+    console.log('frankly.parent received a response with an invalid protocol', res)
     return
   }
 
@@ -75,7 +75,7 @@ window.addEventListener('message', function (event) {
 })
 
 module.exports = {
-  init: function(){ },
+  init: function () {},
 
   request: function (method, data, timeout) {
     var id = ++reqid
@@ -98,26 +98,26 @@ module.exports = {
 
     return new Promise(function (resolve, reject) {
       var req = {
-        protocol : 'frankly;v1',
-        id       : id,
-        method   : method,
-        type     : 'request',
-        data     : data,
-        time     : new Date,
-        timeout  : timeout,
-        resolve  : resolve,
-        reject   : reject,
+        protocol: 'frankly;v1',
+        id: id,
+        method: method,
+        type: 'request',
+        data: data,
+        time: new Date,
+        timeout: timeout,
+        resolve: resolve,
+        reject: reject,
       }
 
       requests[req.id] = req
 
       window.parent.postMessage({
-        protocol : req.protocol,
-        id       : req.id,
-        method   : req.method,
-        type     : req.type,
-        time     : req.time,
-        data     : req.data,
+        protocol: req.protocol,
+        id: req.id,
+        method: req.method,
+        type: req.type,
+        time: req.time,
+        data: req.data,
       }, '*')
     })
   }

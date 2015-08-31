@@ -23,7 +23,7 @@
  */
 'use strict'
 
-function detectBrowser() {
+function detectBrowser () {
   var ua = navigator.userAgent.toLowerCase()
 
   if (ua.indexOf('safari') > -1) {

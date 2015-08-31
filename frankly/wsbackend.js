@@ -23,28 +23,28 @@
  */
 'use strict'
 
-var WebSocket   = require('ws')
-var qs          = require('querystring')
-var url         = require('url')
-var Cookie      = require('./cookie.js')
-var Packet      = require('./packet.js')
-var runtime     = require('./runtime.js')
-var normalize   = require('./normalize.js')
+var WebSocket = require('ws')
+var qs = require('querystring')
+var url = require('url')
+var Cookie = require('./cookie.js')
+var Packet = require('./packet.js')
+var runtime = require('./runtime.js')
+var normalize = require('./normalize.js')
 var denormalize = require('./denormalize.js')
 
-function WsBackend(address, session) {
+function WsBackend (address, session) {
   WebSocket.call(this, makeURL(address, session), 'chat')
 
   this.on('message', function (data, flags) {
     var packet = undefined
 
     if (!flags.binary) {
-      this.close(1000, "non-binary frame received from the server")
+      this.close(1000, 'non-binary frame received from the server')
       return
     }
 
     if (flags.masked) {
-      this.close(1000, "masked frame received from the server")
+      this.close(1000, 'masked frame received from the server')
       return
     }
 
@@ -58,10 +58,10 @@ function WsBackend(address, session) {
 
     try {
       packet = Packet.decode(data)
-      packet.params  = normalize(packet.params)
+      packet.params = normalize(packet.params)
       packet.payload = normalize(packet.payload)
     } catch (e) {
-      this.close(1000, "failed to decode packet received from server")
+      this.close(1000, 'failed to decode packet received from server')
       return
     }
 
@@ -75,18 +75,18 @@ function WsBackend(address, session) {
     clearInterval(this.interval)
   })
 
-  function verifyConnection(waitPeriod) {
+  function verifyConnection (waitPeriod) {
     var currentTime = Date.now()
 
-    if(this.expectActivity) {
-      //Signify connection is broken
-      this.close(1000, "")
+    if (this.expectActivity) {
+      // Signify connection is broken
+      this.close(1000, '')
 
     } else if (currentTime - this.mostRecentCall > waitPeriod) {
-        //Make call to the app server - Ping
-        this.send(new Packet(0, 0, 2147483647, ["ping"], {}, {}))
+      // Make call to the app server - Ping
+      this.send(new Packet(0, 0, 2147483647, ['ping'], {}, {}))
 
-        this.expectActivity = true
+      this.expectActivity = true
     }
   }
 
@@ -101,7 +101,7 @@ if (runtime.browser) {
   // When used in the browser the WebSocket.send function accepts Uint8Array
   // instances produced by Packet.encode.
   WsBackend.prototype.send = function (packet) {
-    packet.params  = denormalize(packet.params)
+    packet.params = denormalize(packet.params)
     packet.payload = denormalize(packet.payload)
     WebSocket.prototype.send.call(this, Packet.encode(packet))
   }
@@ -111,23 +111,23 @@ if (runtime.browser) {
   // This causes an extra memory copy but client requests being pretty small
   // it shouldn't have any impact on performance.
   WsBackend.prototype.send = function (packet) {
-    packet.params  = denormalize(packet.params)
+    packet.params = denormalize(packet.params)
     packet.payload = denormalize(packet.payload)
     WebSocket.prototype.send.call(this, new Buffer(Packet.encode(packet)), { binary: true })
   }
 }
 
-function makeURL(address, session) {
+function makeURL (address, session) {
   var u = url.parse(address)
   var c = undefined
 
   switch (u.protocol) {
-  case 'ws:':
-  case 'wss:':
-    break
+    case 'ws:':
+    case 'wss:':
+      break
 
-  default:
-    throw new Error("websocket connection cannot be establish to " + address)
+    default:
+      throw new Error('websocket connection cannot be establish to ' + address)
   }
 
   if (session.identityToken) {
@@ -157,9 +157,7 @@ function makeURL(address, session) {
     if (c !== undefined) {
       u.query.token = c.value
     }
-  }
-
-  else {
+  } else {
     // In any other case we assume that we're run from a Node.js backend that
     // is providing the app key and secret so no pre-authentication was done.
     // We simply set all the required query parameters so that HTTP handshake

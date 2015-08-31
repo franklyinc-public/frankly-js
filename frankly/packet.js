@@ -23,16 +23,16 @@
  */
 'use strict'
 
-var mpack   = require('mpack-js')
+var mpack = require('mpack-js')
 var Encoder = mpack.Encoder
 var Decoder = mpack.Decoder
 
-function Packet(type, seed, id, path, params, payload) {
-  this.type    = type
-  this.seed    = seed
-  this.id      = id
-  this.path    = path
-  this.params  = params
+function Packet (type, seed, id, path, params, payload) {
+  this.type = type
+  this.seed = seed
+  this.id = id
+  this.path = path
+  this.params = params
   this.payload = payload
 }
 
@@ -45,7 +45,7 @@ Packet.prototype.clone = function () {
 }
 
 Packet.encode = function (packet) {
-  var encoder    = new Encoder()
+  var encoder = new Encoder()
   var properties = packet.type
 
   if (packet.seed) {
@@ -74,13 +74,13 @@ Packet.encode = function (packet) {
 }
 
 Packet.decode = function (bytes) {
-  var packet     = new Packet()
-  var decoder    = new Decoder(bytes)
+  var packet = new Packet()
+  var decoder = new Decoder(bytes)
   var properties = decoder.decode()
 
   packet.type = properties & 0x7
   packet.seed = 0
-  packet.id   = 0
+  packet.id = 0
 
   if (properties & (1 << 6)) {
     packet.seed = decoder.decode()
@@ -90,8 +90,8 @@ Packet.decode = function (bytes) {
     packet.id = decoder.decode()
   }
 
-  packet.path    = decoder.decode()
-  packet.params  = decoder.decode()
+  packet.path = decoder.decode()
+  packet.params = decoder.decode()
   packet.payload = decoder.decode()
   return packet
 }

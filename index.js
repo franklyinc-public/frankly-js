@@ -24,21 +24,23 @@
 'use strict'
 
 var Promise = require('promise')
-var Client  = require('./frankly/client.js')
-var http    = require('./frankly/http.js')
-var jwt     = require('./frankly/jwt.js')
-var parent  = require('./frankly/parent.js')
+var Client = require('./frankly/client.js')
+var http = require('./frankly/http.js')
+var jwt = require('./frankly/jwt.js')
+var parent = require('./frankly/parent.js')
 var widgets = require('./frankly/widgets.js')
 var runtime = require('./frankly/runtime.js')
+var message = require('./frankly/message.js')
 
 var index = {
-  Client                 : Client,
-  generateIdentityToken  : jwt.generateIdentityToken,
-  identityTokenGenerator : jwt.identityTokenGenerator,
-  http                   : http,
-  parent                 : parent,
-  widgets                : widgets,
-  runtime                : runtime,
+  Client: Client,
+  generateIdentityToken: jwt.generateIdentityToken,
+  identityTokenGenerator: jwt.identityTokenGenerator,
+  http: http,
+  parent: parent,
+  widgets: widgets,
+  runtime: runtime,
+  message: message,
 }
 
 var key = undefined

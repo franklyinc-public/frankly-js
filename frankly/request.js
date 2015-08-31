@@ -25,36 +25,36 @@
 
 var Error = require('./error.js')
 
-function Request(packet, expire, resolve, reject) {
-  this.packet  = packet
-  this.expire  = expire
+function Request (packet, expire, resolve, reject) {
+  this.packet = packet
+  this.expire = expire
   this.resolve = resolve
-  this.reject  = reject
+  this.reject = reject
 }
 
 Request.prototype.timeout = function () {
   var type = this.packet.type
   var path = this.packet.path
-  this.reject(Error.make(operation(type), path, 408, "the request timed out"))
+  this.reject(Error.make(operation(type), path, 408, 'the request timed out'))
 }
 
 Request.prototype.cancel = function () {
   var type = this.packet.type
   var path = this.packet.path
-  this.reject(Error.make(operation(type), path, 500, "the request got canceled"))
+  this.reject(Error.make(operation(type), path, 500, 'the request got canceled'))
 }
 
 Request.prototype.operation = function () {
   return operation(this.packet.type)
 }
 
-function operation(type) {
+function operation (type) {
   switch (type) {
-  case 0:  return 'read'
-  case 1:  return 'create'
-  case 2:  return 'update'
-  case 3:  return 'delete'
-  default: return 'unknown'
+    case 0:  return 'read'
+    case 1:  return 'create'
+    case 2:  return 'update'
+    case 3:  return 'delete'
+    default: return 'unknown'
   }
 }
 

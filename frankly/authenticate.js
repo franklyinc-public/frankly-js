@@ -24,13 +24,13 @@
 'use strict'
 
 var Promise = require('promise')
-var url     = require('url')
-var Error   = require('./error.js')
-var http    = require('./http.js')
+var url = require('url')
+var Error = require('./error.js')
+var http = require('./http.js')
 var runtime = require('./runtime.js')
-var auth    = undefined
+var auth = undefined
 
-function errorHandler(operation, path, reject) {
+function errorHandler (operation, path, reject) {
   return function (err) {
     if (err.status === undefined) {
       err = Error.make(operation, path, 500, err.message)
@@ -39,8 +39,8 @@ function errorHandler(operation, path, reject) {
   }
 }
 
-function nocookie(options, generateIdentityToken) {
-  function generateNonce() {
+function nocookie (options, generateIdentityToken) {
+  function generateNonce () {
     options.path = '/auth/nonce'
 
     return new Promise(function (resolve, reject) {
@@ -55,15 +55,15 @@ function nocookie(options, generateIdentityToken) {
   return new Promise(function (resolve, reject) {
     generateNonce()
       .then(generateIdentityToken)
-      .then(function(identityToken) {
+      .then(function (identityToken) {
         resolve({ identityToken: identityToken, path: '/auth' })
       })
       .catch(reject)
   })
 }
 
-function common(options, generateIdentityToken) {
-  function generateNonce() {
+function common (options, generateIdentityToken) {
+  function generateNonce () {
     options.path = '/auth/nonce'
 
     return new Promise(function (resolve, reject) {
@@ -75,9 +75,9 @@ function common(options, generateIdentityToken) {
     })
   }
 
-  function generateSessionToken(identityToken) {
-    options.path    = '/auth'
-    options.headers = { 'frankly-app-identity-token' : identityToken }
+  function generateSessionToken (identityToken) {
+    options.path = '/auth'
+    options.headers = { 'frankly-app-identity-token': identityToken }
 
     return new Promise(function (resolve, reject) {
       http.get(options)
@@ -103,44 +103,44 @@ function common(options, generateIdentityToken) {
 }
 
 switch (runtime.browser) {
-case 'ie10':
-case 'safari':
-  auth = nocookie
-  break
+  case 'ie10':
+  case 'safari':
+    auth = nocookie
+    break
 
-default:
-  auth = common
-  break
+  default:
+    auth = common
+    break
 }
 
-function authenticate(address, generateIdentityToken, options) {
+function authenticate (address, generateIdentityToken, options) {
   var u = undefined
 
   if (typeof address !== 'string') {
-    throw new Error("authentication against Frankly servers requires a string for address but " + address + " was found")
+    throw new Error('authentication against Frankly servers requires a string for address but ' + address + ' was found')
   }
 
   if (typeof generateIdentityToken !== 'function') {
-    throw new Error("authentication against Frankly servers requires a function callback as second argument to generate the identity token")
+    throw new Error('authentication against Frankly servers requires a function callback as second argument to generate the identity token')
   }
 
   u = url.parse(address)
 
   switch (u.protocol) {
-  case 'http:':
-  case 'https:':
-    break
+    case 'http:':
+    case 'https:':
+      break
 
-  case 'ws:':
-    u.protocol = 'http:'
-    break
+    case 'ws:':
+      u.protocol = 'http:'
+      break
 
-  case 'wss:':
-    u.protocol = 'https:'
-    break
+    case 'wss:':
+      u.protocol = 'https:'
+      break
 
-  default:
-    throw new Error("authenticating against Frankly servers is only available over http or https but " + u.protocol + " was found")
+    default:
+      throw new Error('authenticating against Frankly servers is only available over http or https but ' + u.protocol + ' was found')
   }
 
   if (options === undefined) {

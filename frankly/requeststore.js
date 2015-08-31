@@ -23,9 +23,11 @@
  */
 'use strict'
 
+var _forEach = require('lodash/collection/forEach')
+var _map = require('lodash/collection/map')
 var Request = require('./request.js')
 
-function RequestStore() {
+function RequestStore () {
   this.requests = { }
 }
 
@@ -46,14 +48,10 @@ RequestStore.prototype.load = function (packet) {
 }
 
 RequestStore.prototype.timeout = function (now) {
-  var key = undefined
-  var req = undefined
   var map = this.requests
-  var exp = [ ]
+  var exp = []
 
-  for (key in map) {
-    req = map[key]
-
+  _forEach(map, function (req, key) {
     if (req.expire !== undefined && req.expire <= now) {
       delete map[key]
       exp.push(req)
@@ -63,39 +61,24 @@ RequestStore.prototype.timeout = function (now) {
         console.log(e)
       }
     }
-  }
+  })
 
   return exp
 }
 
 RequestStore.prototype.cancel = function () {
-  var key = undefined
-  var req = undefined
-  var map = this.requests
-  var exp = [ ]
-
-  this.requests = { }
-
-  for (key in map) {
-    req = map[key]
-    exp.push(req)
+  return _map(this.requests, function (req) {
     try {
       req.cancel()
     } catch (e) {
       console.log(e)
     }
-  }
-
-  return exp
+    return req
+  })
 }
 
 RequestStore.prototype.each = function (callback) {
-  var key = undefined
-  var map = this.requests
-
-  for (key in map) {
-    callback(map[key])
-  }
+  _forEach(this.requests, callback)
 }
 
 module.exports = RequestStore

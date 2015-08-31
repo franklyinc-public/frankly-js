@@ -23,7 +23,9 @@
  */
 'use strict'
 
-function denormalize(object) {
+var _forEach = require('lodash/collection/forEach')
+
+function denormalize (object) {
   var k = undefined
   var x = undefined
 
@@ -40,22 +42,23 @@ function denormalize(object) {
   }
 
   if (object instanceof Array) {
-    for (k in object) {
-      object[k] = denormalize(object[k])
-    }
+    _forEach(object, function (val, key) {
+      object[key] = denormalize(val)
+    })
+
     return object
   }
 
   x = { }
 
-  for (k in object) {
-    x[underscore(k)] = denormalize(object[k])
-  }
+  _forEach(object, function (val, key) {
+    x[underscore(key)] = denormalize(val)
+  })
 
   return x
 }
 
-function underscore(k) {
+function underscore (k) {
   var s = ''
   var i = undefined
   var c = undefined

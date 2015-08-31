@@ -23,117 +23,105 @@
  */
 'use strict'
 
+var _every = require('lodash/collection/every')
+var _find = require('lodash/collection/find')
+
 var matchBuild = [
   { match: ['rooms', null, 'messages', null],
-    build: buildRoomMessage },
+  build: buildRoomMessage },
 
   { match: ['rooms', null, 'participants', null],
-    build: buildRoomParticipant },
+  build: buildRoomParticipant },
 
   { match: ['rooms', null, 'subscribers', null],
-    build: buildRoomSubscriber },
+  build: buildRoomSubscriber },
 
   { match: ['rooms', null, 'owners', null],
-    build: buildRoomOwner },
+  build: buildRoomOwner },
 
   { match: ['rooms', null, 'moderators', null],
-    build: buildRoomModerator },
+  build: buildRoomModerator },
 
   { match: ['rooms', null, 'members', null],
-    build: buildRoomMember },
+  build: buildRoomMember },
 
   { match: ['rooms', null, 'announcers', null],
-    build: buildRoomAnnouncer },
+  build: buildRoomAnnouncer },
 
   { match: ['rooms', null, 'count'],
-    build: buildRoomCount },
+  build: buildRoomCount },
 
   { match: ['rooms', null],
-    build: buildRoom },
+  build: buildRoom },
 
   { match: ['users', null, 'ban'],
-    build: buildUserBan },
+  build: buildUserBan },
 
   { match: ['users', null],
-    build: buildUser },
+  build: buildUser },
 
   { match: ['apps', null],
-    build: buildApp },
+  build: buildApp },
 
   { match: ['session'],
-    build: buildSession },
+  build: buildSession },
 ]
 
-function build(path, payload) {
-  var key = null
+function build (path, payload) {
+  var builder = undefined
 
-  for (key in matchBuild) {
-    key = matchBuild[key]
+  builder = _find(matchBuild, function (b) {
+    return match(path, b.match)
+  })
 
-    if (match(path, key.match)) {
-      return key.build(path, payload)
-    }
+  if (builder) {
+    return builder.build(path, payload)
   }
 }
 
-function match(path, refp) {
-  var i = null
-  var p = null
-  var r = null
-
+function match (path, refp) {
   if (path.length !== refp.length) {
     return false
   }
 
-  for (i in refp) {
-    r = refp[i]
-    p = path[i]
+  return _every(path, function (part, i) {
+    var r = refp[i]
 
-    if (r === null) {
-      continue
-    }
-
-    if (r === p) {
-      continue
-    }
-
-    return false
-  }
-
-  return true
+    return r === null || r === part
+  })
 }
 
-function buildApp(path, payload) {
+function buildApp (path, payload) {
   return {
     type: 'app',
-    app:  payload,
+    app: payload,
   }
 }
 
-function buildRoom(path, payload) {
+function buildRoom (path, payload) {
   return {
     type: 'room',
     room: payload,
   }
 }
 
-function buildRoomMessage(path, payload) {
+function buildRoomMessage (path, payload) {
   return {
-    type:    'room-message',
-    room:    { id: parseInt(path[1]) },
+    type: 'room-message',
+    room: { id: parseInt(path[1]) },
     message: payload,
   }
 }
 
-function buildRoomCount(path, payload) {
+function buildRoomCount (path, payload) {
   return {
-    type:  'room-count',
-    room:  { id: parseInt(path[1]) },
+    type: 'room-count',
+    room: { id: parseInt(path[1]) },
     count: payload,
   }
 }
 
-function buildRoomParticipant(path, payload) {
+function buildRoomParticipant (path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
@@ -145,7 +133,7 @@ function buildRoomParticipant(path, payload) {
   }
 }
 
-function buildRoomSubscriber(path, payload) {
+function buildRoomSubscriber (path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
@@ -157,7 +145,7 @@ function buildRoomSubscriber(path, payload) {
   }
 }
 
-function buildRoomOwner(path, payload) {
+function buildRoomOwner (path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
@@ -169,7 +157,7 @@ function buildRoomOwner(path, payload) {
   }
 }
 
-function buildRoomModerator(path, payload) {
+function buildRoomModerator (path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
@@ -181,7 +169,7 @@ function buildRoomModerator(path, payload) {
   }
 }
 
-function buildRoomMember(path, payload) {
+function buildRoomMember (path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
@@ -193,7 +181,7 @@ function buildRoomMember(path, payload) {
   }
 }
 
-function buildRoomAnnouncer(path, payload) {
+function buildRoomAnnouncer (path, payload) {
   if (!payload) {
     payload = { id: parseInt(path[3]) }
   }
@@ -205,24 +193,24 @@ function buildRoomAnnouncer(path, payload) {
   }
 }
 
-function buildUser(path, payload) {
+function buildUser (path, payload) {
   return {
     type: 'user',
     user: payload,
   }
 }
 
-function buildUserBan(path, payload) {
+function buildUserBan (path, payload) {
   return {
     type: 'user-ban',
     user: { id: parseInt(path[1]) },
-    ban:  payload,
+    ban: payload,
   }
 }
 
-function buildSession(path, payload) {
+function buildSession (path, payload) {
   return {
-    type:    'session',
+    type: 'session',
     session: payload,
   }
 }

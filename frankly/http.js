@@ -23,47 +23,48 @@
  */
 'use strict'
 
-var http        = require('http')
-var https       = require('https')
-var Promise     = require('promise')
-var Cookie      = require('./cookie.js')
-var UserAgent   = require('./useragent.js')
-var Error       = require('./error.js')
-var normalize   = require('./normalize.js')
+var _map = require('lodash/collection/map')
+var http = require('http')
+var https = require('https')
+var Promise = require('promise')
+var Cookie = require('./cookie.js')
+var UserAgent = require('./useragent.js')
+var Error = require('./error.js')
+var normalize = require('./normalize.js')
 var denormalize = require('./denormalize.js')
 
-function operation(method) {
+function operation (method) {
   switch (method) {
-  case undefined: return 'read'
-  case 'GET':     return 'read'
-  case 'POST':    return 'create'
-  case 'PUT':     return 'update'
-  case 'DELETE':  return 'delete'
-  default:        return 'unknown'
+    case undefined: return 'read'
+    case 'GET':     return 'read'
+    case 'POST':    return 'create'
+    case 'PUT':     return 'update'
+    case 'DELETE':  return 'delete'
+    default:        return 'unknown'
   }
 }
 
-function request(options, data) {
+function request (options, data) {
   var request = undefined
   var encoder = undefined
   var cookies = undefined
-  var index   = undefined
+  var index = undefined
 
   switch (options.protocol) {
-  case undefined:
-    request = http.request
-    break
+    case undefined:
+      request = http.request
+      break
 
-  case 'http:':
-    request = http.request
-    break
+    case 'http:':
+      request = http.request
+      break
 
-  case 'https:':
-    request = https.request
-    break
+    case 'https:':
+      request = https.request
+      break
 
-  default:
-    throw new Error("protocol must be 'http', 'https or undefined to submit http requests: found " + options.protocol)
+    default:
+      throw new Error("protocol must be 'http', 'https or undefined to submit http requests: found " + options.protocol)
   }
 
   if (options.headers === undefined) {
@@ -79,16 +80,10 @@ function request(options, data) {
   }
 
   if (options.cookies !== undefined) {
-    cookies = [ ]
-
-    for (index in options.cookies) {
-      cookies.push(Cookie.format(options.cookies[index]))
-    }
-
-    options.headers['cookie'] = cookies
+    options.headers['cookie'] = _map(options.cookies, Cookie.format)
   }
 
-  options.withCredentials = true;
+  options.withCredentials = true
 
   if (data === undefined) {
     data = ''
@@ -107,7 +102,7 @@ function request(options, data) {
       // based on https://github.com/substack/http-browserify/pull/80
       if (req.setTimeout === undefined) {
         req.xhr.ontimeout = req.emit.bind(req, 'timeout')
-        req.xhr.timeout   = options.timeout
+        req.xhr.timeout = options.timeout
       } else {
         req.setTimeout(options.timeout)
       }
@@ -118,16 +113,15 @@ function request(options, data) {
       var cookies
 
       try {
-
         cookies = res.headers['set-cookie']
 
         if (cookies === undefined) {
-          cookies = [ ]
+          cookies = []
         }
 
         delete res.headers['set-cookie']
       } catch (e) {
-        cookies = [ ]
+        cookies = []
       }
 
       res.cookies = Cookie.parse(cookies)
@@ -164,7 +158,7 @@ function request(options, data) {
     })
 
     req.on('timeout', function () {
-      reject(Error.make(operation(options.method), options.path, 408, "request timed out"))
+      reject(Error.make(operation(options.method), options.path, 408, 'request timed out'))
     })
 
     req.write(data)

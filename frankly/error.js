@@ -32,9 +32,9 @@ module.exports = {
     }
 
     err.operation = operation
-    err.path      = path
-    err.status    = status
-    err.reason    = reason
+    err.path = path
+    err.status = status
+    err.reason = reason
 
     return err
   }

@@ -25,7 +25,7 @@
 
 var EventEmitter = require('events').EventEmitter
 
-function WS(url, proto) {
+function WS (url, proto) {
   var self = this
 
   EventEmitter.call(this)
@@ -42,15 +42,15 @@ function WS(url, proto) {
   }
 
   this.ws.onmessage = function (event) {
-    var data  = event.data
+    var data = event.data
     var flags = { }
 
     switch (typeof data) {
-    case 'string':
-      flags = { binary: false, masked: false }
+      case 'string':
+        flags = { binary: false, masked: false }
 
-    default:
-      flags = { binary: true, masked: false }
+      default:
+        flags = { binary: true, masked: false }
     }
 
     self.emit('message', data, flags)

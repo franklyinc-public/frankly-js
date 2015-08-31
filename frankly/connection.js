@@ -23,29 +23,30 @@
  */
 'use strict'
 
+var _forEach = require('lodash/collection/forEach')
 var EventEmitter = require('events').EventEmitter
-var Promise      = require('promise')
-var url          = require('url')
+var Promise = require('promise')
+var url = require('url')
 var authenticate = require('./authenticate.js')
-var jwt          = require('./jwt.js')
-var model        = require('./model.js')
-var Error        = require('./error.js')
-var Packet       = require('./packet.js')
+var jwt = require('./jwt.js')
+var model = require('./model.js')
+var Error = require('./error.js')
+var Packet = require('./packet.js')
 var RequestStore = require('./requeststore.js')
-var HttpBackend  = require('./httpbackend.js')
-var WsBackend    = require('./wsbackend.js')
+var HttpBackend = require('./httpbackend.js')
+var WsBackend = require('./wsbackend.js')
 
-function Connection(address, timeout) {
+function Connection (address, timeout) {
   EventEmitter.call(this)
   this.pending = new RequestStore()
   this.address = address
   this.timeout = timeout
   this.session = undefined
   this.backend = undefined
-  this.timer   = undefined
-  this.args    = undefined
+  this.timer = undefined
+  this.args = undefined
   this.running = false
-  this.idseq   = 1
+  this.idseq = 1
   this.version = 1
   this.backendClass = undefined
 }
@@ -59,83 +60,79 @@ Connection.prototype.open = function () {
   var self = this
 
   if (this.running) {
-    throw new Error("open was called multiple times on the same client before it was closed")
+    throw new Error('open was called multiple times on the same client before it was closed')
   }
 
   switch (arguments.length) {
-  case 1:
-    args = { generateIdentityToken: arguments[0] }
+    case 1:
+      args = { generateIdentityToken: arguments[0]}
 
-    if (typeof args.generateIdentityToken !== 'function') {
-      throw new TypeError("the constructor argument must be a function")
-    }
+      if (typeof args.generateIdentityToken !== 'function') {
+        throw new TypeError('the constructor argument must be a function')
+      }
 
-    break
+      break
 
-  case 2:
-    args = {
-      appKey    : arguments[0],
-      appSecret : arguments[1],
-      options   : { },
-    }
+    case 2:
+      args = {
+        appKey: arguments[0],
+        appSecret: arguments[1],
+        options: { },
+      }
 
-    if (typeof args.appKey !== 'string') {
-      throw new TypeError("the constructor's first argument must be a string")
-    }
+      if (typeof args.appKey !== 'string') {
+        throw new TypeError("the constructor's first argument must be a string")
+      }
 
-    if (typeof args.appSecret !== 'string') {
-      throw new TypeError("the constructor's second argument must be a string")
-    }
+      if (typeof args.appSecret !== 'string') {
+        throw new TypeError("the constructor's second argument must be a string")
+      }
 
-    break
+      break
 
-  case 3:
-    args = {
-      appKey    : arguments[0],
-      appSecret : arguments[1],
-      options   : arguments[2],
-    }
+    case 3:
+      args = {
+        appKey: arguments[0],
+        appSecret: arguments[1],
+        options: arguments[2],
+      }
 
-    if (typeof args.appKey !== 'string') {
-      throw new TypeError("the constructor's first argument must be a string")
-    }
+      if (typeof args.appKey !== 'string') {
+        throw new TypeError("the constructor's first argument must be a string")
+      }
 
-    if (typeof args.appSecret !== 'string') {
-      throw new TypeError("the constructor's second argument must be a string")
-    }
+      if (typeof args.appSecret !== 'string') {
+        throw new TypeError("the constructor's second argument must be a string")
+      }
 
-    break
+      break
 
-  default:
-    throw new Error("invalid argument count for open(function) or open(string, string)")
+    default:
+      throw new Error('invalid argument count for open(function) or open(string, string)')
   }
 
-  this.args    = args
+  this.args = args
   this.running = true
-  this.timer   = setInterval(function () { pulse(self) }, 1000)
+  this.timer = setInterval(function () { pulse(self) }, 1000)
   this.emit('open')
 
   switch (url.parse(this.address).protocol) {
-  case 'ws:':
-  case 'wss:':
-    this.backendClass = WsBackend
-    start(this, this.version + 1, 1000)
-    break
+    case 'ws:':
+    case 'wss:':
+      this.backendClass = WsBackend
+      start(this, this.version + 1, 1000)
+      break
 
-  case 'http:':
-  case 'https:':
-  default:
-    this.backendClass = HttpBackend
-    start(this, this.version + 1, 1000)
-    break
+    case 'http:':
+    case 'https:':
+    default:
+      this.backendClass = HttpBackend
+      start(this, this.version + 1, 1000)
+      break
   }
 }
 
 Connection.prototype.close = function (hasError) {
-  var exp = undefined
-  var key = undefined
-  var req = undefined
-
   if (!this.running) {
     return
   }
@@ -147,19 +144,16 @@ Connection.prototype.close = function (hasError) {
   clearInterval(this.timer)
   this.running = false
   this.session = undefined
-  this.timer   = undefined
+  this.timer = undefined
   this.version = this.version + 1
 
-  exp = this.pending.cancel()
-
-  for (key in exp) {
-    req = exp[key]
-    this.emit('error', Error.make(req.operation(), req.packet.path, 500, "the request got canceled"))
-  }
+  _forEach(this.pending.cancel(), function (req) {
+    this.emit('error', Error.make(req.operation(), req.packet.path, 500, 'the request got canceled'))
+  }.bind(this))
 
   if (this.backend !== undefined) {
     try {
-      this.backend.close(1000, "")
+      this.backend.close(1000, '')
     } catch (e) {
       console.log(e)
     } finally {
@@ -179,14 +173,14 @@ Connection.prototype.emit = function () {
 }
 
 Connection.prototype.request = function (type, path, params, payload) {
-  var packet  = undefined
-  var seed    = undefined
-  var self    = this
+  var packet = undefined
+  var seed = undefined
+  var self = this
   var version = this.version
   var timeout = this.timeout.request
 
   if (!self.running) {
-    throw new Error("submitting request before opening is not allowed")
+    throw new Error('submitting request before opening is not allowed')
   }
 
   if (params === undefined) {
@@ -215,7 +209,7 @@ Connection.prototype.request = function (type, path, params, payload) {
   return new Promise(function (resolve, reject) {
     self.pending.store(packet, Date.now() + timeout, resolve, function (e) {
       if (e.status === 401 && self.version === version && self.backend !== undefined) {
-        self.backend.close(1000, "")
+        self.backend.close(1000, '')
       }
       reject(e)
     })
@@ -235,12 +229,12 @@ Connection.prototype.reconnect = function () {
 
 Connection.prototype.disconnect = function () {
   if (this.backend !== undefined) {
-    this.backend.close(1000, "")
+    this.backend.close(1000, '')
     this.backend = undefined
   }
 }
 
-function start(self, version, delay) {
+function start (self, version, delay) {
   var args = self.args
 
   if (version !== (self.version + 1)) {
@@ -249,7 +243,7 @@ function start(self, version, delay) {
 
   self.version = version
 
-  function success(session) {
+  function success (session) {
     if (version !== self.version) {
       return
     }
@@ -270,7 +264,7 @@ function start(self, version, delay) {
     connect(self, version, delay, session)
   }
 
-  function failure(error) {
+  function failure (error) {
     if (version !== self.version) {
       return
     }
@@ -300,9 +294,9 @@ function start(self, version, delay) {
   if (args.generateIdentityToken === undefined) {
     success({
       app: {
-        id     : parseInt(args.appKey.split(args.appKey.indexOf('-'))[0]),
-        key    : args.appKey,
-        secret : args.appSecret,
+        id: parseInt(args.appKey.split(args.appKey.indexOf('-'))[0]),
+        key: args.appKey,
+        secret: args.appSecret,
       },
       user: {
         id: args.user,
@@ -317,7 +311,7 @@ function start(self, version, delay) {
   }
 }
 
-function publish(self, version) {
+function publish (self, version) {
   var session = self.session
   var pending = self.pending
   var backend = self.backend
@@ -341,7 +335,7 @@ function publish(self, version) {
   })
 }
 
-function connect(self, version, delay, session) {
+function connect (self, version, delay, session) {
   var backend = undefined
   var timeout = undefined
 
@@ -356,7 +350,7 @@ function connect(self, version, delay, session) {
       clearTimeout(timeout)
 
       if (version !== self.version) {
-        backend.close(1000, "")
+        backend.close(1000, '')
         return
       }
 
@@ -370,7 +364,7 @@ function connect(self, version, delay, session) {
       clearTimeout(timeout)
 
       if (version !== self.version) {
-        backend.close(1000, "")
+        backend.close(1000, '')
         return
       }
 
@@ -434,31 +428,26 @@ function connect(self, version, delay, session) {
     }
   })
 
-  timeout = setTimeout(function() {
+  timeout = setTimeout(function () {
     if (version !== self.version) {
       return
     }
 
-    self.emit('error', Error.make('connect', '/', 408, "connection timed out"))
+    self.emit('error', Error.make('connect', '/', 408, 'connection timed out'))
     start(self, version + 1, delay)
-    backend.close(1000, "")
+    backend.close(1000, '')
   }, self.timeout.connect)
 }
 
-function pulse(self) {
-  var exp = self.pending.timeout(Date.now())
-  var key = undefined
-  var req = undefined
-
-  for (key in exp) {
-    req = exp[key]
-    req.reject(Error.make(req.operation(), req.packet.path, 408, "the request timed out"))
-  }
+function pulse (self) {
+  _forEach(self.pending.timeout(Date.now()), function (req) {
+    req.reject(Error.make(req.operation(), req.packet.path, 408, 'the request timed out'))
+  })
 }
 
-function handleResponse(self, packet) {
-  var req  = self.pending.load(packet)
-  var err  = undefined
+function handleResponse (self, packet) {
+  var req = self.pending.load(packet)
+  var err = undefined
   var path = undefined
   var type = undefined
   var data = undefined
@@ -469,41 +458,41 @@ function handleResponse(self, packet) {
     data = packet.payload
 
     switch (type) {
-    case 0:
-      req.resolve(data)
-      return
+      case 0:
+        req.resolve(data)
+        return
 
-    case 1:
-      err = Error.make(req.operation(), path, data.status, data.error)
-      break
+      case 1:
+        err = Error.make(req.operation(), path, data.status, data.error)
+        break
 
-    default:
-      err = Error.make(req.operation(), path, 500, "the server responded with an invalid packet type (" + type + ")")
-      break
+      default:
+        err = Error.make(req.operation(), path, 500, 'the server responded with an invalid packet type (' + type + ')')
+        break
     }
 
     req.reject(err)
   }
 }
 
-function handleSignal(self, packet) {
+function handleSignal (self, packet) {
   var data = model.build(packet.path, packet.payload)
 
   if (data !== undefined) {
     switch (packet.type) {
-    case 2:
-      self.emit('update', data)
-      return
-    case 3:
-      self.emit('delete', data)
-      return
+      case 2:
+        self.emit('update', data)
+        return
+      case 3:
+        self.emit('delete', data)
+        return
     }
   }
 
   self.emit('signal', packet.type, packet.path, packet.payload)
 }
 
-function makeHttpQuery(session, path) {
+function makeHttpQuery (session, path) {
   if (session.token !== undefined) {
     return path + '?token=' + session.token
   } else {
@@ -511,7 +500,7 @@ function makeHttpQuery(session, path) {
   }
 }
 
-function formatPath(path) {
+function formatPath (path) {
   var index = undefined
 
   for (index = 0; index != path.length; ++index) {

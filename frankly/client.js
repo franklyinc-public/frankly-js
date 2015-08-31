@@ -23,7 +23,9 @@
  */
 'use strict'
 
+var _cloneDeep = require('lodash/lang/cloneDeep.js')
 var Connection = require('./connection.js')
+var message = require('./message.js')
 
 /**
  * This class provides the implementation of a network client that exposes
@@ -42,46 +44,62 @@ var Connection = require('./connection.js')
  * call the close method to release system resources.
  *
  * @constructor Client
+ *
+ * @param {string} address
+ *   The address of the remote server for the chat application.
+ *
+ * @param {object} timeout
+ *   Values that specify how long the client should wait before timing out. Available
+ *   properties are 'connect' and 'request', with value in milliseconds.
+ *
+ * @param {integer} timeout.connect
+ *   The length of time the client should wait after trying to connect before timing out,
+ *   specified in milliseconds. If the connect property is not set, client will use default value.
+ *
+ * @param {integer} timeout.request
+ *   The length of time the client should wait after trying to make a request before timing out,
+ *   specified in milliseconds. If the request property is not set, client will use default value.
+ *   
  */
-function Client(address, timeout) {
+function Client (address, timeout) {
   switch (typeof address) {
-  case 'undefined':
-    address = 'https://app.franklychat.com'
-    break
+    case 'undefined':
+      address = 'https://app.franklychat.com'
+      break
 
-  case 'string':
-    address = makeAddress(address)
-    break
+    case 'string':
+      address = makeAddress(address)
+      break
 
-  default:
-    throw new Error("remote server address must be a string")
+    default:
+      throw new Error('remote server address must be a string')
   }
 
   switch (typeof timeout) {
-  case 'undefined':
-    timeout = { connect: 5000, request: 5000 }
-    break
+    case 'undefined':
+      timeout = { connect: 5000, request: 5000 }
+      break
 
-  case 'object':
-    if (timeout.connect === undefined) {
-      timeout.connect = 5000
-    }
-    if (timeout.request === undefined) {
-      timeout.request = 5000
-    }
-    break
+    case 'object':
+      if (timeout.connect === undefined) {
+        timeout.connect = 5000
+      }
+      if (timeout.request === undefined) {
+        timeout.request = 5000
+      }
+      break
 
-  default:
-    throw new Error("timeout parameter must be an object like { connect: ..., request: ... }")
+    default:
+      throw new Error('timeout parameter must be an object like { connect: ..., request: ... }')
   }
 
   Connection.call(this, address, timeout)
 }
 
-function makeAddress(address) {
+function makeAddress (address) {
   switch (address) {
-  case 'https' : return 'https://app.franklychat.com'
-  case 'wss'   : return 'wss://app.franklychat.com'
+    case 'https' : return 'https://app.franklychat.com'
+    case 'wss'   : return 'wss://app.franklychat.com'
   }
 
   if (address.indexOf('https:') === 0) {
@@ -126,7 +144,6 @@ Client.prototype.constructor = Client
  *   with an instance of {Error}.
  */
 Client.prototype.read = function (path, params, payload) {
-  assertDefined(path)
   return this.request(0, path, params, payload)
 }
 
@@ -143,7 +160,6 @@ Client.prototype.read = function (path, params, payload) {
  *   be called with an instance of {Error}.
  */
 Client.prototype.readAnnouncement = function (announcementId) {
-  assertDefined(arguments)
   return this.read(['announcements', announcementId])
 }
 
@@ -156,7 +172,6 @@ Client.prototype.readAnnouncement = function (announcementId) {
  *   will be called with an instance of {Error}.
  */
 Client.prototype.readAnnouncementList = function () {
-  assertDefined(arguments)
   return this.read(['announcements'])
 }
 
@@ -172,7 +187,6 @@ Client.prototype.readAnnouncementList = function () {
  *   be called with an instance of {Error}.
  */
 Client.prototype.readAnnouncementRoomList = function (announcementId) {
-  assertDefined(arguments)
   return this.read(['announcements', annoucementId, 'rooms'])
 }
 
@@ -184,11 +198,10 @@ Client.prototype.readAnnouncementRoomList = function (announcementId) {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
- *   object representing the fectched app or the reject callback while be
+ *   object representing the fetched app or the reject callback will be
  *   called with an instance of {Error}.
  */
 Client.prototype.readApp = function (appId) {
-  assertDefined(arguments)
   return this.read(['apps', appId])
 }
 
@@ -204,7 +217,6 @@ Client.prototype.readApp = function (appId) {
  *   called with an instance of {Error}.
  */
 Client.prototype.readRoom = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId])
 }
 
@@ -217,7 +229,6 @@ Client.prototype.readRoom = function (roomId) {
  *   be called with an instance of {Error}.
  */
 Client.prototype.readRoomList = function () {
-  assertDefined(arguments)
   return this.read(['rooms'])
 }
 
@@ -238,16 +249,29 @@ Client.prototype.readRoomList = function () {
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
- *   object representing the fectched counters or the reject callback while
+ *   object representing the fetched counters or the reject callback will
  *   be called with an instance of {Error}.
  */
 Client.prototype.readRoomCount = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'count'])
 }
 
+/**
+ * Retrieves a spcified message within a given object.
+ *
+ * @param {integer} roomId
+ *   The identifier of the room that message belongs to.
+ *   
+ * @param {integer} messageId
+ *   The identifier of the message to be retrieved.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the fetched message within the specified room or the reject 
+ *   callback will be called with an instance of {Error}.
+ */
+
 Client.prototype.readRoomMessage = function (roomId, messageId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'messages', messageId])
 }
 
@@ -287,23 +311,21 @@ Client.prototype.readRoomMessage = function (roomId, messageId) {
  *   be called with an instance of {Error}.
  */
 Client.prototype.readRoomMessageList = function (roomId, options) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'messages'], options)
 }
 
 /**
- * Retrives the list of online users.
+ * Retrieves the list of online users.
  *
  * @params {integer} roomId
- *   The identifer of the room to fetch participants from.
+ *   The identifier of the room to fetch participants from.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
- *   object representing the fectched user list or the reject callback while
+ *   object representing the fetched user list or the reject callback will
  *   be called with an instance of {Error}.
  */
 Client.prototype.readRoomParticipantList = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'participants'])
 }
 
@@ -311,35 +333,41 @@ Client.prototype.readRoomParticipantList = function (roomId) {
  * Retrieves the list of subscribed users.
  *
  * @params {integer} roomId
- *   The identifer of the room to fetch participants from.
+ *   The identifier of the room to fetch participants from.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
- *   object representing the fectched user list or the reject callback while
+ *   object representing the fetched room subscriber list or the reject callback will
  *   be called with an instance of {Error}.
  */
 Client.prototype.readRoomSubscriberList = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'subscribers'])
 }
 
 Client.prototype.readRoomOwnerList = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'owners'])
 }
 
 Client.prototype.readRoomModeratorList = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'moderators'])
 }
 
 Client.prototype.readRoomMemberList = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'members'])
 }
 
+/**
+ * Retrieves the list of room announcers.
+ *
+ * @params {integer} roomId
+ *   The identifier of the room to fetch room announcers from.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the fetched room announcer list or the reject callback will
+ *   be called with an instance of {Error}.
+ */
 Client.prototype.readRoomAnnouncerList = function (roomId) {
-  assertDefined(arguments)
   return this.read(['rooms', roomId, 'announcers'])
 }
 
@@ -351,21 +379,60 @@ Client.prototype.readSession = function () {
  * Retrieves a user object with id specified as first argument from the app.
  *
  * @params {integer} userId
- *   The identifer of the user to fetch.
+ *   The identifier of the user to fetch.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
- *   object representing the fectched user or the reject callback while
+ *   object representing the fetched user or the reject callback while
  *   be called with an instance of {Error}.
  */
 Client.prototype.readUser = function (userId) {
-  assertDefined(arguments)
   return this.read(['users', userId])
 }
 
+/**
+ * Retrieves ban status of the user with id specified.
+ *
+ * @params {integer} userId
+ *   The identifier of the user to fetch.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the banned status of the user or the reject callback while
+ *   be called with an instance of {Error}.
+ */
 Client.prototype.readUserBan = function (userId) {
-  assertDefined(arguments)
   return this.read(['users', userId, 'ban'])
+}
+
+/**
+ * Retrieves the activity information for the specified app.
+ *
+ * @params {integer} appId
+ *   The identifier of the app to fetch activity information from.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the unread message counts for the specified app or the
+ *   reject callback will be called with an instance of {Error}.
+ */
+Client.prototype.readAppActivity = function (appId) {
+  return this.read(['apps', appId, 'activity'])
+}
+
+/**
+ * Retrieves the activity information for the specified room.
+ *
+ * @params {integer} roomId
+ *   The identifier of the room to fetch activity information from.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the unread message counts for the specified room or the
+ *   reject callback will be called with an instance of {Error}.
+ */
+Client.prototype.readRoomActivity = function (roomId) {
+  return this.read(['rooms', roomId, 'activity'])
 }
 
 /**
@@ -386,11 +453,8 @@ Client.prototype.readUserBan = function (userId) {
  *   object representing the newly created data or the reject callback will
  *   be called with an instance of {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.create = function (path, params, payload) {
-  assertDefined(path)
   return this.request(1, path, params, payload)
 }
 
@@ -412,11 +476,8 @@ Client.prototype.create = function (path, params, payload) {
  *   object representing the newly created announcement or the reject callback
  *   will be called with an instance of {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createAnnouncement = function (options) {
-  assertDefined(arguments)
   return this.create(['announcements'], undefined, options)
 }
 
@@ -453,11 +514,8 @@ Client.prototype.createAnnouncement = function (options) {
  *   object representing the newly created room or the reject callback
  *   will be called with an instance of {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createRoom = function (options) {
-  assertDefined(arguments)
   return this.create(['rooms'], undefined, options)
 }
 
@@ -481,16 +539,15 @@ Client.prototype.createRoom = function (options) {
  *   object representing the newly created message or the reject callback
  *   will be called with an instance of {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createRoomMessage = function (roomId, options) {
   var params = undefined
 
-  assertDefined(arguments)
+  options = _cloneDeep(options)
+  options.contents = message.cloneContentsWithMetadata(options.contents)
 
   if (options.announcement !== undefined) {
-    params  = options
+    params = options
     options = undefined
   }
 
@@ -511,22 +568,19 @@ Client.prototype.createRoomMessage = function (roomId, options) {
  *   object or the reject callback will be called with an instance of
  *   {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'messages', messageId, 'flag'])
 }
 
 /**
  * Sets user to be listening for real-time signals on a room.<br/>
- * After a sucessful call to this method the client will start emitting events
+ * After a successful call to this method the client will start emitting events
  * for real-time changes to the room but it will not be counted as online and
  * will not be listed as one of the participants.
  *
  * @param {integer} roomId
- *   The identifier of the room which the flagged message belong to.
+ *   The identifier of the room which the listener will fire events from.
  *
  * @param {integer} messageId
  *   The identifier of the user to set as listener.
@@ -536,11 +590,8 @@ Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
  *   object or the reject callback will be called with an instance of
  *   {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createRoomListener = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'listeners', userId])
 }
 
@@ -549,7 +600,7 @@ Client.prototype.createRoomListener = function (roomId, userId) {
  * will start receiving pushes for real-time signals on that room.
  *
  * @param {integer} roomId
- *   The identifier of the room which the flagged message belong to.
+ *   The identifier of the room which the user will receive signals from.
  *
  * @param {integer} userId
  *   The identifier of the user to set as participant.
@@ -559,11 +610,8 @@ Client.prototype.createRoomListener = function (roomId, userId) {
  *   object or the reject callback will be called with an instance of
  *   {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createRoomParticipant = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'participants', userId])
 }
 
@@ -572,7 +620,7 @@ Client.prototype.createRoomParticipant = function (roomId, userId) {
  * will start receiving pushes for real-time signals on that room.
  *
  * @param {integer} roomId
- *   The identifier of the room which the flagged message belong to.
+ *   The identifier of the room which the user will receive signals from.
  *
  * @param {integer} userId
  *   The identifier of the user to set as subscriber.
@@ -582,31 +630,40 @@ Client.prototype.createRoomParticipant = function (roomId, userId) {
  *   object or the reject callback will be called with an instance of
  *   {Error}.
  *
- * @fires Client#create
- * @fires Client#error
  */
 Client.prototype.createRoomSubscriber = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'subscribers', userId])
 }
 
 Client.prototype.createRoomOwner = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'owners', userId])
 }
 
 Client.prototype.createRoomModerator = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'moderators', userId])
 }
 
 Client.prototype.createRoomMember = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'members', userId])
 }
 
+/**
+ * Adds a user as an announcer of a room. User will be able to
+ * send sticky messages within that room
+ *
+ * @param {integer} roomId
+ *   The identifier of the room which the user will be an announcer of.
+ *
+ * @param {integer} userId
+ *   The identifier of the user to set as an announcer.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive a null
+ *   object or the reject callback will be called with an instance of
+ *   {Error}.
+ *
+ */
 Client.prototype.createRoomAnnouncer = function (roomId, userId) {
-  assertDefined(arguments)
   return this.create(['rooms', roomId, 'announcers', userId])
 }
 
@@ -632,11 +689,8 @@ Client.prototype.createUser = function (options) {
  *   object representing the returned data or the reject callback will be called
  *   with an instance of {Error}.
  *
- * @fires Client#update
- * @fires Client#error
  */
 Client.prototype.update = function (path, params, payload) {
-  assertDefined(path)
   return this.request(2, path, params, payload)
 }
 
@@ -655,11 +709,8 @@ Client.prototype.update = function (path, params, payload) {
  *   object representing the updated room or the reject callback will be called
  *   with an instance of {Error}.
  *
- * @fires Client#update
- * @fires Client#error
  */
 Client.prototype.updateRoom = function (roomId, options) {
-  assertDefined(arguments)
   return this.update(['rooms', roomId], undefined, options)
 }
 
@@ -678,11 +729,8 @@ Client.prototype.updateRoom = function (roomId, options) {
  *   object representing the updated user or the reject callback will be called
  *   with an instance of {Error}.
  *
- * @fires Client#update
- * @fires Client#error
  */
 Client.prototype.updateUser = function (userId, options) {
-  assertDefined(arguments)
   return this.update(['users', userId], undefined, options)
 }
 
@@ -704,11 +752,8 @@ Client.prototype.updateUser = function (userId, options) {
  *   object representing the returned data or the reject callback will be called
  *   with an instance of {Error}.
  *
- * @fires Client#delete
- * @fires Client#error
  */
 Client.prototype.del = function (path, params, payload) {
-  assertDefined(path)
   return this.request(3, path, params, payload)
 }
 
@@ -729,11 +774,8 @@ Client.prototype.del = function (path, params, payload) {
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires Client#delete
- * @fires Client#error
  */
 Client.prototype.deleteAnnouncement = function (announcementId) {
-  assertDefined(arguments)
   return this.del(['announcements', announcementId])
 }
 
@@ -755,11 +797,8 @@ Client.prototype.deleteAnnouncement = function (announcementId) {
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires Client#delete
- * @fires Client#error
  */
 Client.prototype.deleteRoom = function (roomId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId])
 }
 
@@ -770,17 +809,14 @@ Client.prototype.deleteRoom = function (roomId) {
  *   The identifier of the room where a listener will be removed.
  *
  * @param {integer} userId
- *   The identifer of the user to remove as a listener.
+ *   The identifier of the user to remove as a listener.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires Client#delete
- * @fires Client#error
  */
 Client.prototype.deleteRoomListener = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'listeners', userId])
 }
 
@@ -791,17 +827,14 @@ Client.prototype.deleteRoomListener = function (roomId, userId) {
  *   The identifier of the room where a participant will be removed.
  *
  * @param {integer} userId
- *   The identifer of the user to remove as a participant.
+ *   The identifier of the user to remove as a participant.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires Client#delete
- * @fires Client#error
  */
 Client.prototype.deleteRoomParticipant = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'participants', userId])
 }
 
@@ -812,37 +845,30 @@ Client.prototype.deleteRoomParticipant = function (roomId, userId) {
  *   The identifier of the room where a subscriber will be removed.
  *
  * @param {integer} userId
- *   The identifer of the user to remove as a subscriber.
+ *   The identifier of the user to remove as a subscriber.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of {Error}.
  *
- * @fires Client#delete
- * @fires Client#error
  */
 Client.prototype.deleteRoomSubscriber = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'subscribers', userId])
 }
 
 Client.prototype.deleteRoomOwner = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'owners', userId])
 }
 
 Client.prototype.deleteRoomModerator = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'moderators', userId])
 }
 
 Client.prototype.deleteRoomMember = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'members', userId])
 }
 
 Client.prototype.deleteRoomAnnouncer = function (roomId, userId) {
-  assertDefined(arguments)
   return this.del(['rooms', roomId, 'announcers', userId])
 }
 
@@ -851,27 +877,10 @@ Client.prototype.deleteSession = function () {
 }
 
 Client.prototype.deleteUser = function (userId) {
-  assertDefined(arguments)
   return this.del(['users', userId])
 }
 
 module.exports = Client
-
-function assertDefined(args) {
-  var offset = undefined
-
-  switch (typeof args) {
-  case 'undefined':
-    throw new Error("argument at position 1 must not be undefined")
-
-  case 'object':
-    for (offset in args) {
-      if (args[offset] === undefined) {
-        throw new Error("argument at position " + (parseInt(offset) + 1) + " must not be undefined")
-      }
-    }
-  }
-}
 
 /**
  * This should be the first method called on an instance of Client. After
@@ -933,7 +942,7 @@ function assertDefined(args) {
  */
 
 /**
- * Connection event, fired when the client sucessfully establish a
+ * Connection event, fired when the client successfully establish a
  * connection to a Frankly server.
  *
  * @event Client#connect

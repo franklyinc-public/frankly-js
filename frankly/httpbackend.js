@@ -24,12 +24,12 @@
 'use strict'
 
 var EventEmitter = require('events').EventEmitter
-var url          = require('url')
-var Packet       = require('./packet.js')
-var Cookie       = require('./cookie.js')
-var http         = require('./http.js')
+var url = require('url')
+var Packet = require('./packet.js')
+var Cookie = require('./cookie.js')
+var http = require('./http.js')
 
-function HttpBackend(address, session) {
+function HttpBackend (address, session) {
   var self = this
   var u = undefined
   var i = undefined
@@ -39,19 +39,19 @@ function HttpBackend(address, session) {
   u = url.parse(address)
 
   switch (u.protocol) {
-  case 'http:':
-  case 'https:':
-    break
+    case 'http:':
+    case 'https:':
+      break
 
-  default:
-    throw new Error("http connection cannot be established to " + address)
+    default:
+      throw new Error('http connection cannot be established to ' + address)
   }
 
-  this.closed   = false
-  this.path     = session.path
-  this.headers  = { }
-  this.host     = u.hostname
-  this.port     = u.port
+  this.closed = false
+  this.path = session.path
+  this.headers = { }
+  this.host = u.hostname
+  this.port = u.port
   this.protocol = u.protocol
 
   if (session.identityToken) {
@@ -76,9 +76,7 @@ function HttpBackend(address, session) {
     if (c !== undefined) {
       this.headers['cookie'] = [Cookie.format(c)]
     }
-  }
-
-  else {
+  } else {
     // In any other case we assume that we're run from a Node.js backend that
     // is providing the app key and secret so no pre-authentication was done.
     // We simply set all the required headers so that HTTP requests can be
@@ -113,32 +111,32 @@ HttpBackend.prototype = Object.create(EventEmitter.prototype)
 HttpBackend.prototype.constructor = HttpBackend
 
 HttpBackend.prototype.send = function (packet) {
-  var self   = this
-  var path   = this.path + '/' + packet.path.join('/')
+  var self = this
+  var path = this.path + '/' + packet.path.join('/')
   var method = makeMethod(packet.type)
 
   if (this.closed) {
-    throw new Error("http backend was already closed")
+    throw new Error('http backend was already closed')
   }
 
   // Transforms a packet request into a HTTP request, when the promise gets
   // resolved or rejected we emit an event simulating an asynchronous response
   // packet.
   http.request({
-    method   : method,
-    path     : path,
-    headers  : this.headers,
-    host     : this.host,
-    port     : this.port,
-    protocol : this.protocol,
+    method: method,
+    path: path,
+    headers: this.headers,
+    host: this.host,
+    port: this.port,
+    protocol: this.protocol,
   }, packet.payload)
     .then(function (res) {
       self.emit('packet', new Packet(0, packet.seed, packet.id, packet.path, packet.params, res.content))
     })
     .catch(function (error) {
       self.emit('packet', new Packet(1, packet.seed, packet.id, packet.path, packet.params, {
-        status : error.status,
-        error  : error.reason,
+        status: error.status,
+        error: error.reason,
       }))
     })
 }
@@ -150,18 +148,18 @@ HttpBackend.prototype.close = function (code, reason) {
   }
 }
 
-function makeMethod(type) {
+function makeMethod (type) {
   switch (type) {
-  case 0: return 'GET'
-  case 1: return 'POST'
-  case 2: return 'PUT'
-  case 3: return 'DELETE'
-  default:
-    throw new TypeError("invalid packet type: " + type)
+    case 0: return 'GET'
+    case 1: return 'POST'
+    case 2: return 'PUT'
+    case 3: return 'DELETE'
+    default:
+      throw new TypeError('invalid packet type: ' + type)
   }
 }
 
-function makePath(prefix, path) {
+function makePath (prefix, path) {
   return prefix + '/' + path.join('/')
 }
 

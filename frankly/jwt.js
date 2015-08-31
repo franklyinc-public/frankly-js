@@ -24,7 +24,7 @@
 'use strict'
 
 var Promise = require('promise')
-var jws     = require('jws')
+var jws = require('jws')
 
 /**
  * This function generates an identity token suitable for a single authentication
@@ -58,7 +58,7 @@ var jws     = require('jws')
  * @return {string}
  *  The function returns the generated identity token as a string.
  */
-function generateIdentityToken(appKey, appSecret, nonce, options) {
+function generateIdentityToken (appKey, appSecret, nonce, options) {
   var now = Math.floor(Date.now() / 1000)
   var tok = {
     aak: appKey,
@@ -78,9 +78,9 @@ function generateIdentityToken(appKey, appSecret, nonce, options) {
   }
 
   return jws.sign({
-    secret  : appSecret,
-    payload : tok,
-    header  : {
+    secret: appSecret,
+    payload: tok,
+    header: {
       alg: 'HS256',
       typ: 'JWS',
       cty: 'frankly-it;v1',
@@ -117,7 +117,7 @@ function generateIdentityToken(appKey, appSecret, nonce, options) {
  * @return {function}
  *  A function that generates identity tokens.
  */
-function identityTokenGenerator(appKey, appSecret, options) {
+function identityTokenGenerator (appKey, appSecret, options) {
   return function (nonce) {
     return new Promise(function (resolve, reject) {
       var it = undefined
@@ -135,6 +135,6 @@ function identityTokenGenerator(appKey, appSecret, options) {
 }
 
 module.exports = {
-  generateIdentityToken  : generateIdentityToken,
-  identityTokenGenerator : identityTokenGenerator,
+  generateIdentityToken: generateIdentityToken,
+  identityTokenGenerator: identityTokenGenerator,
 }

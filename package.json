@@ -1,6 +1,6 @@
 {
   "name": "frankly-js",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "JavaScript library providing building blocks to write applications using the Frankly API.",
   "main": "index.js",
   "directories": {
@@ -37,7 +37,8 @@
     "mpack-js": "^1.2.0",
     "promise": "^7.0.1",
     "ws": "^0.7.2",
-    "jws": "^3.0.0"
+    "jws": "^3.0.0",
+    "lodash": "^3.10.1"
   },
   "devDependencies": {
     "browserify": "^10.2.4",
@@ -48,7 +49,7 @@
     "uglify-js": "^2.4.24"
   },
   "scripts": {
-    "test": "mocha --timeout 10000"
+    "test": "mocha $(find test -name '*.js') --timeout 10000"
   },
   "browser": {
     "./frankly/jwt.js": "./frankly/browser/jwt.js",

@@ -25,6 +25,6 @@
 
 module.exports = {
   init: function () {
-    throw new Error("this function is not implemented for Node.js")
+    throw new Error('this function is not implemented for Node.js')
   },
 }

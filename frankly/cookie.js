@@ -23,51 +23,31 @@
  */
 'use strict'
 
+var _map = require('lodash/collection/map')
+var _find = require('lodash/collection/find')
+
 var Cookie = {
-
   get: function (cookies, name) {
-    var index  = undefined
-    var cookie = undefined
-
-    for (index in cookies) {
-      cookie = cookies[index]
-
-      if (cookie.name === name) {
-        return cookie
-      }
-    }
+    return _find(cookies, 'name', name)
   },
 
   parse: function (header) {
-    var array = undefined
-    var index = undefined
-
-    if (header instanceof Array) {
-      array = [ ]
-
-      for (index in header) {
-        array.push(Cookie.parseOne(header[index]))
-      }
-
-      return array
-    }
-
-    return Cookie.parseOne(header)
+    return Array.isArray(header) ? _map(header, Cookie.parseOne) : Cookie.parseOne(header)
   },
 
   parseOne: function (header) {
-    var parts  = header.split(';')
-    var index  = undefined
-    var value  = undefined
+    var parts = header.split(';')
+    var index = undefined
+    var value = undefined
     var cookie = {
-      name     : undefined,
-      value    : undefined,
-      path     : undefined,
-      expires  : undefined,
-      maxAge   : undefined,
-      domain   : undefined,
-      secure   : undefined,
-      httpOnly : undefined,
+      name: undefined,
+      value: undefined,
+      path: undefined,
+      expires: undefined,
+      maxAge: undefined,
+      domain: undefined,
+      secure: undefined,
+      httpOnly: undefined,
     }
 
     if (parts.length > 0) {

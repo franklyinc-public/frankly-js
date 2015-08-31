@@ -25,10 +25,10 @@
 
 module.exports = {
   generateIdentityToken: function () {
-    throw new Error("this function is not implemented for web browsers")
+    throw new Error('this function is not implemented for web browsers')
   },
 
   identityTokenGenerator: function () {
-    throw new Error("this function is not implemented for web browsers")
+    throw new Error('this function is not implemented for web browsers')
   },
 }
