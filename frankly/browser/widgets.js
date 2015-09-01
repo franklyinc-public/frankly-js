@@ -173,7 +173,7 @@ function notifyConfigReady (config) {
 }
 
 function getConfigByWindow (window) {
-  return _find(configs, 'window', window)
+  return _find(configs, { window: window })
 }
 
 function getConfigByWindowOrDefault (window) {
