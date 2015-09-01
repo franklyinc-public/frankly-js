@@ -23,58 +23,27 @@
  */
 'use strict'
 
-var _endsWith = require('lodash/string/endsWith')
-var _forEach = require('./utility/collection/forEach')
+var hasOwn = Object.prototype.hasOwnProperty
+var toString = Object.prototype.toString
 
-function normalize (object) {
-  var x = undefined
+function forEach (obj, fn, ctx) {
+  var i = undefined
 
-  if (typeof object !== 'object') {
-    return object
+  if (toString.call(fn) !== '[object Function]') {
+    throw new TypeError('iterator must be a function')
   }
 
-  if (object === null) {
-    return object
-  }
-
-  if (object instanceof Array) {
-    _forEach(object, function (v, k) {
-      object[k] = normalize(v)
-    })
-    return object
-  }
-
-  x = { }
-
-  _forEach(object, function (v, k) {
-    var date = undefined
-
-    if (_endsWith(k, '_on') && !isNaN((date = new Date(v)).getTime())) {
-      x[camelCase(k)] = date
-    } else {
-      x[camelCase(k)] = normalize(v)
+  if (Array.isArray(obj) || typeof obj === 'string') {
+    for (i = 0; i < obj.length; i++) {
+      fn.call(ctx, obj[i], i, obj)
     }
-  })
-
-  return x
+  } else {
+    for (i in obj) {
+      if (hasOwn.call(obj, i)) {
+        fn.call(ctx, obj[i], i, obj)
+      }
+    }
+  }
 }
 
-function camelCase (k) {
-  var s = ''
-  var x = false
-
-  _forEach(k, function (c) {
-    if (c === '_') {
-      x = true
-    } else if (x) {
-      x = false
-      s += c.toUpperCase()
-    } else {
-      s += c
-    }
-  })
-
-  return s
-}
-
-module.exports = normalize
+module.exports = forEach

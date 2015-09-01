@@ -23,7 +23,7 @@
  */
 'use strict'
 
-var _forEach = require('lodash/collection/forEach')
+var _forEach = require('./utility/collection/forEach')
 
 function denormalize (object) {
   var k = undefined
