@@ -46,7 +46,7 @@ describe('franly.Packet', function () {
 
       assert(packet.type === 0)
       assert(packet.seed === 1)
-      assert(packet.id   === 2)
+      assert(packet.id === 2)
 
       assert(packet.path.length === 2)
       assert(packet.path[0] === 'hello')
@@ -81,7 +81,7 @@ describe('franly.Packet', function () {
 
       assert(packet.type === 1)
       assert(packet.seed === 1)
-      assert(packet.id   === 2)
+      assert(packet.id === 2)
 
       assert(packet.path.length === 2)
       assert(packet.path[0] === 'hello')
@@ -115,7 +115,7 @@ describe('franly.Packet', function () {
 
       assert(packet.type === 2)
       assert(packet.seed === 1)
-      assert(packet.id   === 2)
+      assert(packet.id === 2)
 
       assert(packet.path.length === 2)
       assert(packet.path[0] === 'hello')
@@ -149,7 +149,7 @@ describe('franly.Packet', function () {
 
       assert(packet.type === 3)
       assert(packet.seed === 0)
-      assert(packet.id   === 0)
+      assert(packet.id === 0)
 
       assert(packet.path.length === 1)
       assert(packet.path[0] === 'hello')

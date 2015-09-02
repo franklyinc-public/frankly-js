@@ -672,6 +672,31 @@ Client.prototype.createUser = function (options) {
 }
 
 /**
+ * Creates a new file object on Frankly servers and returns that object.
+ * The properties of that new file are given as keyword arguments to the method.
+ *
+ * @param {object} options
+ *   The properties to set on the newly created file.
+ *
+ * @param {string} options.category
+ *   One of the file categories supported by the API (see the *File* section of
+ *   the documentation).
+ *
+ * @param {string} options.type
+ *   One of the file types supported by the API (see the *File* section of the
+ *   documentation).
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the newly created file or the reject callback
+ *   will be called with an instance of {Error}.
+ *
+ */
+Client.prototype.createFile = function(options){
+  return this.create(['files'], undefined, options)
+}
+
+/**
  * This method exposes a generic interface for updating objects through the Frankly API.
  * Every update* method is implemented on top of this one.
  *
@@ -732,6 +757,27 @@ Client.prototype.updateRoom = function (roomId, options) {
  */
 Client.prototype.updateUser = function (userId, options) {
   return this.update(['users', userId], undefined, options)
+}
+
+/**
+ * Updates the content of a file object hosted on Frankly servers.
+ *
+ * @param {string} url
+ *   The properties to set on the newly created message.
+ *
+ * @param {Buffer | ArrayBuffer} file
+ *   A Buffer(in node.js or io.js) or ArrayBuffer(in browsers) object providing the new
+ *   content of the file.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the reject callback will be called with an instance
+ *   of {Error}.
+ *
+ */
+Client.prototype.updateFile = function(url, file){
+  var i = url.indexOf('/files/')
+
+  return this.update(url.slice(i > -1 ? i : 0).split('/').slice(1), undefined, file)
 }
 
 /**

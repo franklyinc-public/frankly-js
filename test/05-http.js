@@ -23,15 +23,15 @@
  */
 'use strict'
 
-var assert  = require('assert')
-var nhttp   = require('http')
-var fhttp   = require('../frankly/http.js')
+var assert = require('assert')
+var nhttp = require('http')
+var fhttp = require('../frankly/http.js')
 
 describe('frankly.Http', function () {
   describe('GET', function () {
     it('creates a web server and submits a get request', function (done) {
-      var host   = '127.0.0.1'
-      var port   = 4460
+      var host = '127.0.0.1'
+      var port = 4460
       var server = nhttp.createServer()
 
       server.on('request', function (req, res) {
@@ -39,7 +39,7 @@ describe('frankly.Http', function () {
           'content-type': 'application/json',
         })
 
-        res.write(JSON.stringify("Hello World!"))
+        res.write(JSON.stringify('Hello World!'))
         res.end()
       })
 
@@ -50,7 +50,7 @@ describe('frankly.Http', function () {
           .then(function (res) {
             try {
               assert.strictEqual(res.statusCode, 200)
-              assert.strictEqual(res.content, "Hello World!")
+              assert.strictEqual(res.content, 'Hello World!')
               done()
             } catch (e) {
               done(e)
@@ -71,8 +71,8 @@ describe('frankly.Http', function () {
 
   describe('POST', function () {
     it('creates a web server and submits a get request', function (done) {
-      var host   = '127.0.0.1'
-      var port   = 4461
+      var host = '127.0.0.1'
+      var port = 4461
       var server = nhttp.createServer()
 
       server.on('request', function (req, res) {
@@ -95,7 +95,7 @@ describe('frankly.Http', function () {
       })
 
       server.on('listening', function () {
-        var payload = "Hello World!"
+        var payload = 'Hello World!'
         var options = { host: host, port: port }
 
         fhttp.post(options, payload)
@@ -123,8 +123,8 @@ describe('frankly.Http', function () {
 
   describe('PUT', function () {
     it('creates a web server and submits a get request', function (done) {
-      var host   = '127.0.0.1'
-      var port   = 4462
+      var host = '127.0.0.1'
+      var port = 4462
       var server = nhttp.createServer()
 
       server.on('request', function (req, res) {
@@ -175,14 +175,14 @@ describe('frankly.Http', function () {
 
   describe('DELETE', function () {
     it('creates a web server and submits a delete request', function (done) {
-      var host   = '127.0.0.1'
-      var port   = 4460
+      var host = '127.0.0.1'
+      var port = 4460
       var server = nhttp.createServer()
 
       server.on('request', function (req, res) {
         res.writeHead(204, 'Gone', {
-          'content-type'   : 'application/json',
-          'content-length' : 0,
+          'content-type': 'application/json',
+          'content-length': 0,
         })
 
         res.end()

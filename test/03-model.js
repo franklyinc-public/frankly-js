@@ -24,7 +24,7 @@
 'use strict'
 
 var assert = require('assert')
-var model  = require('../frankly/model.js')
+var model = require('../frankly/model.js')
 
 describe('frankly.Model', function () {
   describe('app', function () {
@@ -211,7 +211,7 @@ describe('frankly.Model', function () {
     })
   })
 
-  describe('fail', function() {
+  describe('fail', function () {
     it('checks if matching an invalid path is properly handled', function () {
       var obj = model.build(['something'], { })
       assert.strictEqual(obj, undefined)

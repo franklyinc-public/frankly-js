@@ -44,6 +44,18 @@ function operation (method) {
   }
 }
 
+function toBuffer(ab) {
+  var buffer = new Buffer(ab.byteLength)
+  var view = new Uint8Array(ab)
+  var i = 0
+
+  for (; i < buffer.length; ++i) {
+    buffer[i] = view[i];
+  }
+
+  return buffer
+}
+
 function request (options, data) {
   var request = undefined
   var encoder = undefined
@@ -87,11 +99,17 @@ function request (options, data) {
 
   if (data === undefined) {
     data = ''
-    options.headers['content-length'] = 0
   } else {
-    data = JSON.stringify(denormalize(data))
+    if (!(data instanceof Buffer)){
+      if (data instanceof ArrayBuffer) {
+        data = toBuffer(data)
+      } else {
+        data = JSON.stringify(denormalize(data))
+        options.headers['content-type'] = 'application/json'
+      }
+    }
+
     options.headers['content-length'] = data.length
-    options.headers['content-type'] = 'application/json'
   }
 
   return new Promise(function (resolve, reject) {

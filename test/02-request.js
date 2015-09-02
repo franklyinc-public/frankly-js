@@ -23,9 +23,9 @@
  */
 'use strict'
 
-var assert       = require('assert')
-var Promise      = require('promise')
-var Packet       = require('../frankly/packet.js')
+var assert = require('assert')
+var Promise = require('promise')
+var Packet = require('../frankly/packet.js')
 var RequestStore = require('../frankly/requeststore.js')
 
 describe('frankly.Request', function () {

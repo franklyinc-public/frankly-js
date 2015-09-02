@@ -24,14 +24,14 @@
 'use strict'
 
 var Promise = require('promise')
-var assert  = require('assert')
-var jwt     = require('../frankly/jwt.js')
-var Client  = require('../frankly/client.js')
+var assert = require('assert')
+var jwt = require('../frankly/jwt.js')
+var Client = require('../frankly/client.js')
 
 describe('frankly.Client [ws]', function () {
-  var appKey    = process.env.FRANKLY_APP_KEY
+  var appKey = process.env.FRANKLY_APP_KEY
   var appSecret = process.env.FRANKLY_APP_SECRET
-  var appHost   = process.env.FRANKLY_APP_HOST
+  var appHost = process.env.FRANKLY_APP_HOST
 
   if (appHost.indexOf('https') === 0) {
     appHost = 'wss' + appHost.slice(5)
@@ -42,10 +42,10 @@ describe('frankly.Client [ws]', function () {
   }
 
   describe('auth', function () {
-    it("authenticate a client against a Frankly server running at " + appHost, function (done) {
-      var client  = new Client(appHost)
-      var auth    = false
-      var open    = false
+    it('authenticate a client against a Frankly server running at ' + appHost, function (done) {
+      var client = new Client(appHost)
+      var auth = false
+      var open = false
       var connect = false
 
       client.on('open', function () {
@@ -78,11 +78,11 @@ describe('frankly.Client [ws]', function () {
   })
 
   describe('room', function () {
-    it("create, read, update, delete rooms on Frankly server running at " + appHost, function (done) {
+    it('create, read, update, delete rooms on Frankly server running at ' + appHost, function (done) {
       var client = new Client(appHost)
 
       client.on('open', function (session) {
-        function create(room) {
+        function create (room) {
           return new Promise(function (resolve, reject) {
             client.createRoom(room).then(function (other) {
               assert.strictEqual(typeof other.id, 'number')
@@ -94,7 +94,7 @@ describe('frankly.Client [ws]', function () {
           })
         }
 
-        function read(room) {
+        function read (room) {
           return new Promise(function (resolve, reject) {
             client.readRoom(room.id).then(function (other) {
               assert.strictEqual(other.id, room.id)
@@ -106,7 +106,7 @@ describe('frankly.Client [ws]', function () {
           })
         }
 
-        function update(room) {
+        function update (room) {
           return new Promise(function (resolve, reject) {
             client.updateRoom(room.id, { title: 'Meh...', status: 'active' }).then(function (other) {
               assert.strictEqual(other.id, room.id)
@@ -118,24 +118,24 @@ describe('frankly.Client [ws]', function () {
           })
         }
 
-        function del(room) {
+        function del (room) {
           return client.deleteRoom(room.id)
         }
 
-        function success() {
+        function success () {
           client.close()
           done()
         }
 
-        function failure(e) {
+        function failure (e) {
           client.close()
           done(e)
         }
 
         create({
-          status      : 'unpublished',
-          title       : 'Hoth',
-          description : 'A very very cold room...',
+          status: 'unpublished',
+          title: 'Hoth',
+          description: 'A very very cold room...',
         })
           .then(read)
           .then(update)
@@ -150,19 +150,19 @@ describe('frankly.Client [ws]', function () {
   })
 
   describe('message', function () {
-    it("create a room and a message on Frankly server running at " + appHost, function (done) {
+    it('create a room and a message on Frankly server running at ' + appHost, function (done) {
       var client = new Client(appHost)
 
       client.on('open', function (session) {
-        function createRoom(room) {
+        function createRoom (room) {
           return client.createRoom({
-            status      : 'active',
-            title       : 'Hoth',
-            description : 'A very very cold room...',
+            status: 'active',
+            title: 'Hoth',
+            description: 'A very very cold room...',
           })
         }
 
-        function createMessage(room) {
+        function createMessage (room) {
           return new Promise(function (resolve, reject) {
             client.createRoomMessage(room.id, {
               contents: [
@@ -178,7 +178,7 @@ describe('frankly.Client [ws]', function () {
           })
         }
 
-        function readMessage(object) {
+        function readMessage (object) {
           return new Promise(function (resolve, reject) {
             client.readRoomMessageList(object.room.id)
               .then(function (messages) {
@@ -191,12 +191,12 @@ describe('frankly.Client [ws]', function () {
           })
         }
 
-        function success() {
+        function success () {
           client.close()
           done()
         }
 
-        function failure(e) {
+        function failure (e) {
           client.close()
           done(e)
         }
@@ -214,14 +214,14 @@ describe('frankly.Client [ws]', function () {
   })
 
   describe('chat', function () {
-    it("create a room and send messages between two clients on Frankly server at " + appHost, function (done) {
+    it('create a room and send messages between two clients on Frankly server at ' + appHost, function (done) {
       var admin = new Client(appHost)
       var user1 = new Client(appHost)
       var user2 = new Client(appHost)
       var count = 0
-      var room  = undefined
+      var room = undefined
 
-      function failure(error) {
+      function failure (error) {
         admin.close()
         user1.close()
         user2.close()
@@ -231,7 +231,7 @@ describe('frankly.Client [ws]', function () {
       admin.on('open', function () {
         admin.createRoom({
           status: 'active',
-          title:  'Hi!',
+          title: 'Hi!',
         }).then(function (r) {
           room = r
           user1.open(jwt.identityTokenGenerator(appKey, appSecret, { uid: 1 }))
@@ -279,9 +279,8 @@ describe('frankly.Client [ws]', function () {
     it('authenticates as a user and updates the display name', function (done) {
       var admin = new Client(appHost)
 
-      function success(user) {
+      function success (user) {
         try {
-
           assert.strictEqual(user.displayName, 'Luke Skywalker')
           done()
         } catch (e) {
@@ -289,7 +288,7 @@ describe('frankly.Client [ws]', function () {
         }
       }
 
-      function failure(err) {
+      function failure (err) {
         admin.close()
         done(err)
       }

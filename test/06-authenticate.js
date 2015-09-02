@@ -24,16 +24,16 @@
 'use strict'
 
 var assert = require('assert')
-var auth   = require('../frankly/authenticate.js')
-var jwt    = require('../frankly/jwt.js')
+var auth = require('../frankly/authenticate.js')
+var jwt = require('../frankly/jwt.js')
 
 describe('frankly.Authenticate', function () {
-  var appKey    = process.env.FRANKLY_APP_KEY
+  var appKey = process.env.FRANKLY_APP_KEY
   var appSecret = process.env.FRANKLY_APP_SECRET
-  var appHost   = process.env.FRANKLY_APP_HOST
+  var appHost = process.env.FRANKLY_APP_HOST
 
   describe('success', function () {
-    it("sucessfuly authenticates against a Frankly server running at " + appHost, function (done) {
+    it('sucessfuly authenticates against a Frankly server running at ' + appHost, function (done) {
       auth(appHost, jwt.identityTokenGenerator(appKey, appSecret, { role: 'admin' }))
         .then(function (session) {
           assert(typeof session.user.id !== 'undefined')
@@ -55,10 +55,10 @@ describe('frankly.Authenticate', function () {
   })
 
   describe('failure', function () {
-    it("fails to authenticate against a Frankly server running at " + appHost, function (done) {
+    it('fails to authenticate against a Frankly server running at ' + appHost, function (done) {
       auth(appHost, jwt.identityTokenGenerator(appKey, appSecret.split('').reverse().join(''), { role: 'admin' }))
         .then(function (session) {
-          done(new Error("successful authentication: " + session))
+          done(new Error('successful authentication: ' + session))
         })
         .catch(function (error) {
           done()
