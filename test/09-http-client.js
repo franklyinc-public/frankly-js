@@ -83,7 +83,7 @@ describe('frankly.Client [http]', function () {
     it('create, read, update, delete rooms on Frankly server running at ' + appHost, function (done) {
       var client = new Client(appHost)
 
-      client.on('open', function (session) {
+      client.on('connect', function (session) {
         function create (room) {
           return new Promise(function (resolve, reject) {
             client.createRoom(room).then(function (other) {
@@ -155,7 +155,7 @@ describe('frankly.Client [http]', function () {
     it('create a room a message on Frankly server running at ' + appHost, function (done) {
       var client = new Client(appHost)
 
-      client.on('open', function (session) {
+      client.on('connect', function (session) {
         function createRoom (room) {
           return client.createRoom({
             status: 'active',
@@ -255,7 +255,7 @@ describe('frankly.Client [http]', function () {
         done(err)
       }
 
-      client.on('authenticate', function (session) {
+      client.on('connect', function (session) {
         client
           .createFile({
             category: 'useravatar', type: 'image'

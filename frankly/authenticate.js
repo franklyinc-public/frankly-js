@@ -102,16 +102,7 @@ function common (options, generateIdentityToken) {
   })
 }
 
-switch (runtime.browser) {
-  case 'ie10':
-  case 'safari':
-    auth = nocookie
-    break
-
-  default:
-    auth = common
-    break
-}
+auth = runtime.browser ? nocookie : common
 
 function authenticate (address, generateIdentityToken, options) {
   var u = undefined

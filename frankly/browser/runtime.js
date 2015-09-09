@@ -24,14 +24,6 @@
 'use strict'
 
 function detectBrowser () {
-  var ua = navigator.userAgent.toLowerCase()
-
-  if (ua.indexOf('safari') > -1) {
-    return 'safari'
-  } else if (ua.indexOf('msie 10') > -1) {
-    return 'ie10'
-  }
-
   return 'unknown'
 }
 

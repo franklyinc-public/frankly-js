@@ -44,13 +44,13 @@ function operation (method) {
   }
 }
 
-function toBuffer(ab) {
+function toBuffer (ab) {
   var buffer = new Buffer(ab.byteLength)
   var view = new Uint8Array(ab)
   var i = 0
 
   for (; i < buffer.length; ++i) {
-    buffer[i] = view[i];
+    buffer[i] = view[i]
   }
 
   return buffer
@@ -100,7 +100,7 @@ function request (options, data) {
   if (data === undefined) {
     data = ''
   } else {
-    if (!(data instanceof Buffer)){
+    if (!(data instanceof Buffer)) {
       if (data instanceof ArrayBuffer) {
         data = toBuffer(data)
       } else {

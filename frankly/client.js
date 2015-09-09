@@ -692,7 +692,7 @@ Client.prototype.createUser = function (options) {
  *   will be called with an instance of {Error}.
  *
  */
-Client.prototype.createFile = function(options){
+Client.prototype.createFile = function (options) {
   return this.create(['files'], undefined, options)
 }
 
@@ -774,7 +774,7 @@ Client.prototype.updateUser = function (userId, options) {
  *   of {Error}.
  *
  */
-Client.prototype.updateFile = function(url, file){
+Client.prototype.updateFile = function (url, file) {
   var i = url.indexOf('/files/')
 
   return this.update(url.slice(i > -1 ? i : 0).split('/').slice(1), undefined, file)

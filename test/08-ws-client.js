@@ -81,7 +81,7 @@ describe('frankly.Client [ws]', function () {
     it('create, read, update, delete rooms on Frankly server running at ' + appHost, function (done) {
       var client = new Client(appHost)
 
-      client.on('open', function (session) {
+      client.on('connect', function (session) {
         function create (room) {
           return new Promise(function (resolve, reject) {
             client.createRoom(room).then(function (other) {
@@ -153,7 +153,7 @@ describe('frankly.Client [ws]', function () {
     it('create a room and a message on Frankly server running at ' + appHost, function (done) {
       var client = new Client(appHost)
 
-      client.on('open', function (session) {
+      client.on('connect', function (session) {
         function createRoom (room) {
           return client.createRoom({
             status: 'active',
@@ -228,7 +228,7 @@ describe('frankly.Client [ws]', function () {
         done(error)
       }
 
-      admin.on('open', function () {
+      admin.on('connect', function () {
         admin.createRoom({
           status: 'active',
           title: 'Hi!',
@@ -260,7 +260,7 @@ describe('frankly.Client [ws]', function () {
           }).catch(failure)
       })
 
-      user2.on('open', function () {
+      user2.on('connect', function () {
         user2.createRoomMessage(room.id, {
           contents: [
             { type: 'text/plain', value: 'How are you?' },
