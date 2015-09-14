@@ -24,6 +24,7 @@
 'use strict'
 
 var _map = require('lodash/collection/map')
+var querystring = require('querystring')
 var http = require('http')
 var https = require('https')
 var Promise = require('promise')
@@ -58,9 +59,6 @@ function toBuffer (ab) {
 
 function request (options, data) {
   var request = undefined
-  var encoder = undefined
-  var cookies = undefined
-  var index = undefined
 
   switch (options.protocol) {
     case undefined:
@@ -97,90 +95,113 @@ function request (options, data) {
 
   options.withCredentials = true
 
-  if (data === undefined) {
-    data = ''
-  } else {
-    if (!(data instanceof Buffer)) {
-      if (data instanceof ArrayBuffer) {
-        data = toBuffer(data)
-      } else {
-        data = JSON.stringify(denormalize(data))
-        options.headers['content-type'] = 'application/json'
-      }
-    }
-
-    options.headers['content-length'] = data.length
-  }
-
   return new Promise(function (resolve, reject) {
-    var req = request(options)
+    var filereader = undefined
 
-    if (options.timeout !== undefined) {
-      // http-browserify doesn't support this method yet:
-      // based on https://github.com/substack/http-browserify/pull/80
-      if (req.setTimeout === undefined) {
-        req.xhr.ontimeout = req.emit.bind(req, 'timeout')
-        req.xhr.timeout = options.timeout
-      } else {
-        req.setTimeout(options.timeout)
+    function onInputReady () {
+      var req = undefined
+
+      options.headers['content-length'] = data.length
+
+      // Node JS's http and https modules don't support params. Add support for it.
+      if (options.params && options.path) {
+        options.path += '?' + querystring.stringify(options.params)
+        delete options['params']
       }
-    }
 
-    req.on('response', function (res) {
-      var content = undefined
-      var cookies
+      req = request(options)
 
-      try {
-        cookies = res.headers['set-cookie']
+      if (options.timeout !== undefined) {
+        // http-browserify doesn't support this method yet:
+        // based on https://github.com/substack/http-browserify/pull/80
+        if (req.setTimeout === undefined) {
+          req.xhr.ontimeout = req.emit.bind(req, 'timeout')
+          req.xhr.timeout = options.timeout
+        } else {
+          req.setTimeout(options.timeout)
+        }
+      }
 
-        if (cookies === undefined) {
+      req.on('response', function (res) {
+        var content = undefined
+        var cookies = undefined
+
+        try {
+          cookies = res.headers['set-cookie']
+
+          if (cookies === undefined) {
+            cookies = []
+          }
+
+          delete res.headers['set-cookie']
+        } catch (e) {
           cookies = []
         }
 
-        delete res.headers['set-cookie']
-      } catch (e) {
-        cookies = []
+        res.cookies = Cookie.parse(cookies)
+
+        res.on('data', function (chunk) {
+          if (content === undefined) {
+            content = '' + chunk
+          } else {
+            content += chunk
+          }
+        })
+
+        res.on('end', function () {
+          try {
+            if (content !== undefined && res.headers['content-type'] === 'application/json') {
+              content = normalize(JSON.parse(content))
+            }
+          } catch (e) {
+            reject(Error.make(operation(options.method), options.path, 500, e.message))
+            return
+          }
+
+          if ((res.statusCode >= 200) && (res.statusCode < 300)) {
+            res.content = content
+            resolve(res)
+          } else {
+            reject(Error.make(operation(options.method), options.path, res.statusCode, content))
+          }
+        })
+      })
+
+      req.on('error', function (e) {
+        reject(Error.make(operation(options.method), options.path, 500, e.message))
+      })
+
+      req.on('timeout', function () {
+        reject(Error.make(operation(options.method), options.path, 408, 'request timed out'))
+      })
+
+      req.write(data)
+      req.end()
+    }
+
+    if (typeof Blob !== 'undefined' && data instanceof Blob) {
+      // Convert to ArrayBuffer that http module understands
+      filereader = new FileReader()
+      filereader.onload = function () {
+        data = toBuffer(filereader.result)
+        onInputReady()
+      }
+      filereader.onerror = function () {
+        reject(filereader.error)
+      }
+      filereader.readAsArrayBuffer(data)
+    } else {
+      if (!(data instanceof Buffer)) {
+        if (data instanceof ArrayBuffer) {
+          data = toBuffer(data)
+        } else {
+          data = (data === undefined) ? '' : JSON.stringify(denormalize(data))
+          options.headers['content-type'] = 'application/json'
+        }
       }
 
-      res.cookies = Cookie.parse(cookies)
-
-      res.on('data', function (chunk) {
-        if (content === undefined) {
-          content = '' + chunk
-        } else {
-          content += chunk
-        }
-      })
-
-      res.on('end', function () {
-        try {
-          if (content !== undefined && res.headers['content-type'] === 'application/json') {
-            content = normalize(JSON.parse(content))
-          }
-        } catch (e) {
-          reject(Error.make(operation(options.method), options.path, 500, e.message))
-          return
-        }
-
-        if ((res.statusCode >= 200) && (res.statusCode < 300)) {
-          res.content = content
-          resolve(res)
-        } else {
-          reject(Error.make(operation(options.method), options.path, res.statusCode, content))
-        }
-      })
-    })
-
-    req.on('error', function (e) {
-      reject(Error.make(operation(options.method), options.path, 500, e.message))
-    })
-
-    req.on('timeout', function () {
-      reject(Error.make(operation(options.method), options.path, 408, 'request timed out'))
-    })
-
-    req.write(data)
-    req.end()
+      onInputReady()
+    }
   })
 }
 

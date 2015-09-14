@@ -156,7 +156,9 @@ describe('frankly.Client [http]', function () {
       var client = new Client(appHost)
 
       client.on('connect', function (session) {
-        function createRoom (room) {
+        var roomId = undefined
+
+        function createRoom () {
           return client.createRoom({
             status: 'active',
             title: 'Hoth',
@@ -164,7 +166,13 @@ describe('frankly.Client [http]', function () {
           })
         }
 
+        function deleteRoom () {
+          return client.deleteRoom(roomId)
+        }
+
         function createMessage (room) {
+          roomId = room.id
+
           return new Promise(function (resolve, reject) {
             client.createRoomMessage(room.id, {
               contents: [
@@ -206,6 +214,7 @@ describe('frankly.Client [http]', function () {
         createRoom()
           .then(createMessage)
           .then(readMessage)
+          .then(deleteRoom)
           .then(success)
           .catch(failure)
       })

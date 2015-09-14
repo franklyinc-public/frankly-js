@@ -355,8 +355,8 @@ function connect (self, version, delay, session) {
       }
 
       self.backend = backend
-      self.emit('connect')
       publish(self, version)
+      self.emit('connect')
       return
     })
   } else {
@@ -380,6 +380,7 @@ function connect (self, version, delay, session) {
           }
 
           self.session = session
+          publish(self, version)
           self.emit('authenticate', session)
 
           if (self.version !== version) {
@@ -387,7 +388,6 @@ function connect (self, version, delay, session) {
           }
 
           self.emit('connect')
-          publish(self, version)
         })
         .catch(function (error) {
           if (self.version !== version) {

@@ -129,6 +129,7 @@ HttpBackend.prototype.send = function (packet) {
     host: this.host,
     port: this.port,
     protocol: this.protocol,
+    params: packet.params,
   }, packet.payload)
     .then(function (res) {
       self.emit('packet', new Packet(0, packet.seed, packet.id, packet.path, packet.params, res.content))

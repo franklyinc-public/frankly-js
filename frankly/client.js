@@ -24,8 +24,10 @@
 'use strict'
 
 var _cloneDeep = require('lodash/lang/cloneDeep.js')
+var WsBackend = require('./wsbackend.js')
 var Connection = require('./connection.js')
 var message = require('./message.js')
+var fileHelper = require('./file.js')
 
 /**
  * This class provides the implementation of a network client that exposes
@@ -765,9 +767,9 @@ Client.prototype.updateUser = function (userId, options) {
  * @param {string} url
  *   The properties to set on the newly created message.
  *
- * @param {Buffer | ArrayBuffer} file
- *   A Buffer(in node.js or io.js) or ArrayBuffer(in browsers) object providing the new
- *   content of the file.
+ * @param {Buffer | ArrayBuffer | Blob} file
+ *   A Buffer object in node js environment, or an ArrayBuffer or a Blob object in browsers
+ *   providing the new content of the file.
  *
  * @returns {Promise}
  *   The method returns a Promise where the reject callback will be called with an instance
@@ -775,9 +777,18 @@ Client.prototype.updateUser = function (userId, options) {
  *
  */
 Client.prototype.updateFile = function (url, file) {
+  var self = undefined
   var i = url.indexOf('/files/')
+  var path = url.slice(i > -1 ? i : 0).split('/').slice(1)
 
-  return this.update(url.slice(i > -1 ? i : 0).split('/').slice(1), undefined, file)
+  if (this.backendClass === WsBackend) {
+    self = this
+    return this.create(['files', 'token'], undefined, { url: url }).then(function (token) {
+      return fileHelper.updateWithToken(self.address, path, token, file)
+    })
+  } else {
+    return this.update(path, undefined, file)
+  }
 }
 
 /**
