@@ -128,6 +128,11 @@ then simply run
 $ npm test
 ```
 
+To run a single test in isolation, run
+```
+$ mocha test/[name-of-test-file.js] --timeout=10000
+```
+
 Documentation
 -------------
 
