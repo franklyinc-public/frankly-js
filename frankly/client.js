@@ -532,9 +532,12 @@ Client.prototype.createRoom = function (options) {
  * @param {object} options
  *   The properties to set on the newly created message.
  *
- * @param {Array} options.contents
+ * @param {Array} [options.contents]
  *   A list of content objects representing what will be embedded into the messages
  *   once the announcement is published to one or more rooms.
+ *
+ * @param {integer} [options.announcement]
+ *   The identifier of the announcement object created via createAnnouncement.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive an
@@ -546,7 +549,10 @@ Client.prototype.createRoomMessage = function (roomId, options) {
   var params = undefined
 
   options = _cloneDeep(options)
-  options.contents = message.cloneContentsWithMetadata(options.contents)
+
+  if (options.contents){
+    options.contents = message.cloneContentsWithMetadata(options.contents)
+  }
 
   if (options.announcement !== undefined) {
     params = options
