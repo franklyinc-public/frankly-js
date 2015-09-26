@@ -1,6 +1,6 @@
 {
   "name": "frankly-js",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "JavaScript library providing building blocks to write applications using the Frankly API.",
   "main": "index.js",
   "directories": {
@@ -49,7 +49,7 @@
     "uglify-js": "^2.4.24"
   },
   "scripts": {
-    "test": "mocha $(find test -name '*.js') --timeout 10000"
+    "test": "mocha test/index.js --timeout=20000"
   },
   "browser": {
     "./frankly/jwt.js": "./frankly/browser/jwt.js",

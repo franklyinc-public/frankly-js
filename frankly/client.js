@@ -189,7 +189,7 @@ Client.prototype.readAnnouncementList = function () {
  *   be called with an instance of {Error}.
  */
 Client.prototype.readAnnouncementRoomList = function (announcementId) {
-  return this.read(['announcements', annoucementId, 'rooms'])
+  return this.read(['announcements', announcementId, 'rooms'])
 }
 
 /**

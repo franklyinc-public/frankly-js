@@ -24,7 +24,7 @@
 'use strict'
 
 var assert = require('assert')
-var message = require('../frankly/message.js')
+var message = require('../../frankly/message.js')
 
 describe('frankly.message', function () {
   describe('cloneContentsWithMetadata', function () {

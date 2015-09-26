@@ -24,8 +24,8 @@
 'use strict'
 
 var assert = require('assert')
-var auth = require('../frankly/authenticate.js')
-var jwt = require('../frankly/jwt.js')
+var auth = require('../../frankly/authenticate.js')
+var jwt = require('../../frankly/jwt.js')
 
 describe('frankly.Authenticate', function () {
   var appKey = process.env.FRANKLY_APP_KEY

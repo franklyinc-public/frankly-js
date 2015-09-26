@@ -25,7 +25,7 @@
 
 var assert = require('assert')
 var nhttp = require('http')
-var fhttp = require('../frankly/http.js')
+var fhttp = require('../../frankly/http.js')
 
 describe('frankly.Http', function () {
   describe('GET', function () {

@@ -23,41 +23,37 @@
  */
 'use strict'
 
-var url = require('url')
-var Promise = require('promise')
-var http = require('./http.js')
+var assert = require('assert')
+var utils = require('./utils.js')
 
-module.exports = {
-  updateWithToken: function (address, path, token, file) {
-    var u = url.parse(address)
-    var protocol = undefined
+describe('frankly.Client auth at ' + utils.getHost(), function () {
+  it('connects with proper order of events', function (done) {
+    var counter = 0
 
-    switch (u.protocol) {
-      case 'ws:':
-        protocol = 'http:'
-        break
-      case 'wss:':
-        protocol = 'https:'
-        break
-      default:
-        protocol = u.protocol
-        break
-    }
-
-    return new Promise(function (resolve, reject) {
-      http.put({
-        path: '/' + path.join('/'),
-        host: u.host,
-        protocol: protocol,
-        port: u.port,
-        params: {
-          file_token: token
+    utils.forEachClient({
+      role: 'admin'
+    }, {
+      'open': function () {
+        this._open = ++counter
+      },
+      'authenticate': function (session) {
+        assert.strictEqual(session.user.role, 'admin')
+        this._authenticate = ++counter
+      },
+      'connect': function () {
+        this._connect = ++counter
+        this.client.close()
+      },
+      'close': function () {
+        this._close = ++counter
+        try {
+          // Make sure events are triggered in order
+          assert.strictEqual(this._open < this._authenticate && this._authenticate < this._connect && this._connect < this._close, true)
+          this.done()
+        } catch (e) {
+          this.done(e)
         }
-      }, file)
-        .then(function (res) {
-          resolve(res.content)
-        })
-        .catch(reject)
-    })
-  }
-}
+      }
+    }, done)
+  })
+})

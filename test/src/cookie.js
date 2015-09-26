@@ -24,7 +24,7 @@
 'use strict'
 
 var assert = require('assert')
-var Cookie = require('../frankly/cookie.js')
+var Cookie = require('../../frankly/cookie.js')
 
 describe('frankly.Cookie', function () {
   describe('simple', function () {

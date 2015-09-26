@@ -24,7 +24,7 @@
 'use strict'
 
 var assert = require('assert')
-var model = require('../frankly/model.js')
+var model = require('../../frankly/model.js')
 
 describe('frankly.Model', function () {
   describe('app', function () {

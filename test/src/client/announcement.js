@@ -23,41 +23,30 @@
  */
 'use strict'
 
-var url = require('url')
-var Promise = require('promise')
-var http = require('./http.js')
+var assert = require('assert')
+var utils = require('./utils.js')
 
-module.exports = {
-  updateWithToken: function (address, path, token, file) {
-    var u = url.parse(address)
-    var protocol = undefined
+describe('frankly.Client announcement at ' + utils.getHost(), function () {
+  describe('error handling', function () {
+    it("don't allow invalid announcement", function (done) {
+      utils.forEachClient({ role: 'admin' }, {
+        connect: function () {
+          var client = this.client
+          var done = this.done
 
-    switch (u.protocol) {
-      case 'ws:':
-        protocol = 'http:'
-        break
-      case 'wss:':
-        protocol = 'https:'
-        break
-      default:
-        protocol = u.protocol
-        break
-    }
-
-    return new Promise(function (resolve, reject) {
-      http.put({
-        path: '/' + path.join('/'),
-        host: u.host,
-        protocol: protocol,
-        port: u.port,
-        params: {
-          file_token: token
+          client.createAnnouncement({
+            contents: [{
+              type: 'text/plain'
+            }]
+          }).then(function () {
+            done(new Error('this request has invalid format, but succeeded'))
+          })
+            .catch(function (error) {
+              assert.strictEqual(error.status, 400)
+              done()
+            })
         }
-      }, file)
-        .then(function (res) {
-          resolve(res.content)
-        })
-        .catch(reject)
+      }, done)
     })
-  }
-}
+  })
+})

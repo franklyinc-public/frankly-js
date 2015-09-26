@@ -24,7 +24,7 @@
 'use strict'
 
 var assert = require('assert')
-var Packet = require('../frankly/packet.js')
+var Packet = require('../../frankly/packet.js')
 
 describe('franly.Packet', function () {
   describe('READ', function () {
