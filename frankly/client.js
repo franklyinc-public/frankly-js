@@ -480,6 +480,10 @@ Client.prototype.create = function (path, params, payload) {
  *
  */
 Client.prototype.createAnnouncement = function (options) {
+
+  options = _cloneDeep(options)
+  options.contents = message.cloneContentsWithMetadata(options.contents)
+
   return this.create(['announcements'], undefined, options)
 }
 
@@ -582,16 +586,7 @@ Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
 }
 
 /**
- * Sets user to be listening for real-time signals on a room.<br/>
- * After a successful call to this method the client will start emitting events
- * for real-time changes to the room but it will not be counted as online and
- * will not be listed as one of the participants.
- *
- * @param {integer} roomId
- *   The identifier of the room which the listener will fire events from.
- *
- * @param {integer} messageId
- *   The identifier of the user to set as listener.
+ * @deprecated The createRoomListener function is deprecated and should not be used.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
@@ -600,7 +595,11 @@ Client.prototype.createRoomMessageFlag = function (roomId, messageId) {
  *
  */
 Client.prototype.createRoomListener = function (roomId, userId) {
-  return this.create(['rooms', roomId, 'listeners', userId])
+  console.warn("createRoomListener has been deprecated and should not be used.")
+
+  return new Promise(function (resolve, reject) {
+    resolve({})
+  })
 }
 
 /**
@@ -868,11 +867,7 @@ Client.prototype.deleteRoom = function (roomId) {
 /**
  * Deletes a listener from a room.
  *
- * @param {integer} roomId
- *   The identifier of the room where a listener will be removed.
- *
- * @param {integer} userId
- *   The identifier of the user to remove as a listener.
+ * @deprecated The deleteRoomListener function is deprecated and should not be used.
  *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
@@ -880,7 +875,11 @@ Client.prototype.deleteRoom = function (roomId) {
  *
  */
 Client.prototype.deleteRoomListener = function (roomId, userId) {
-  return this.del(['rooms', roomId, 'listeners', userId])
+  console.warn("deleteRoomListener has been deprecated and should not be used.")
+
+  return new Promise(function (resolve, reject) {
+    resolve({})
+  })
 }
 
 /**
