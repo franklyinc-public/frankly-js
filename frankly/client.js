@@ -664,14 +664,20 @@ Client.prototype.createRoomMember = function (roomId, userId) {
  * @param {integer} userId
  *   The identifier of the user to set as an announcer.
  *
+ *  @param {object} options
+ *  The properties to set on the newly created room announcer.
+ *
+ *  @param {object} options.notes
+ *  The notes to be recorded for the room announcer.
+ *
  * @returns {Promise}
  *   The method returns a Promise where the resolve callback will receive a null
  *   object or the reject callback will be called with an instance of
  *   {Error}.
  *
  */
-Client.prototype.createRoomAnnouncer = function (roomId, userId) {
-  return this.create(['rooms', roomId, 'announcers', userId])
+Client.prototype.createRoomAnnouncer = function (roomId, userId, options) {
+  return this.create(['rooms', roomId, 'announcers', userId], undefined, options)
 }
 
 Client.prototype.createUser = function (options) {
@@ -794,6 +800,29 @@ Client.prototype.updateFile = function (url, file) {
   } else {
     return this.update(path, undefined, file)
   }
+}
+
+/**
+ * Updates a room announcer aboject. This call supports partial updates, allowing any
+ * number of properties of the room object to be updated at a time.
+ *
+ * @param {integer} roomId
+ *   The identifier to the room that the user is an announcer of.
+ *
+ * @param {integer} userId
+ * The identifier to the user that is an announcer.
+ *
+ * @param {object} options
+ *   The set of properties to update on the room announcer object.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the updated room announcer object or the reject callback
+ *   will be called with an instance of {Error}.
+ *
+ */
+Client.prototype.updateRoomAnnouncer = function (roomId, userId, options) {
+  return this.update(['rooms', roomId, 'announcers', userId], undefined, options)
 }
 
 /**
