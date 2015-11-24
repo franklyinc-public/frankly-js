@@ -47,18 +47,18 @@ var fileHelper = require('./file.js')
  *
  * @constructor Client
  *
- * @param {string} address
+ * @param {String} address
  *   The address of the remote server for the chat application.
  *
- * @param {object} timeout
+ * @param {Object} timeout
  *   Values that specify how long the client should wait before timing out. Available
  *   properties are 'connect' and 'request', with value in milliseconds.
  *
- * @param {integer} timeout.connect
+ * @param {Integer} timeout.connect
  *   The length of time the client should wait after trying to connect before timing out,
  *   specified in milliseconds. If the connect property is not set, client will use default value.
  *
- * @param {integer} timeout.request
+ * @param {Integer} timeout.request
  *   The length of time the client should wait after trying to make a request before timing out,
  *   specified in milliseconds. If the request property is not set, client will use default value.
  *   
@@ -131,13 +131,13 @@ Client.prototype.constructor = Client
  * This method exposes a generic interface for reading objects from the Frankly API.
  * Every read* method is implemented on top of this one.
  *
- * @param {string} path
+ * @param {String} path
  *   A path to the resource that will be fetched.
  *
- * @param {object} params
+ * @param {Object} params
  *   Parameters passed as part of the request.
  *
- * @param {object} payload
+ * @param {Object} payload
  *   Payload passed as part of the request.
  *
  * @returns {Promise}
@@ -153,7 +153,7 @@ Client.prototype.read = function (path, params, payload) {
  * Retrieves an announcement object with id sepecified as first argument from
  * the app.
  *
- * @param {integer} announcementId
+ * @param {Integer} announcementId
  *   The identifier of the announcement to fetch.
  *
  * @returns {Promise}
@@ -180,7 +180,7 @@ Client.prototype.readAnnouncementList = function () {
 /**
  * Retrieves the list of rooms that an annoucement has been published to.
  *
- * @param {integer} announcementId
+ * @param {Integer} announcementId
  *   The identifier of the announcement to get the list of rooms for.
  *
  * @returns {Promise}
@@ -195,7 +195,7 @@ Client.prototype.readAnnouncementRoomList = function (announcementId) {
 /**
  * Retrives an app object with id specified as first argument.
  *
- * @param {integer} appId
+ * @param {Integer} appId
  *   The identifier of the app to fetch.
  *
  * @returns {Promise}
@@ -210,7 +210,7 @@ Client.prototype.readApp = function (appId) {
 /**
  * Retrieves a room object with id specified as first argument from the app.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room to fetch.
  *
  * @returns {Promise}
@@ -246,7 +246,7 @@ Client.prototype.readRoomList = function () {
  * <em>Currently room counters are not computed on demand but refresh at regular
  * intervals.</em>
  *
- * @params {integer} roomId
+ * @params {Integer} roomId
  *   The id of the room to fetch counters from.
  *
  * @returns {Promise}
@@ -261,10 +261,10 @@ Client.prototype.readRoomCount = function (roomId) {
 /**
  * Retrieves a spcified message within a given object.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room that message belongs to.
  *   
- * @param {integer} messageId
+ * @param {Integer} messageId
  *   The identifier of the message to be retrieved.
  *
  * @returns {Promise}
@@ -280,19 +280,19 @@ Client.prototype.readRoomMessage = function (roomId, messageId) {
 /**
  * Retrieves messages in a room.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room to fetch messages from.
  *
- * @param {object} options
+ * @param {Object} options
  *   A set of options set to filter which messages we want to receive from
  *   the specified room.
  *
- * @param {integer} options.offset
+ * @param {Integer} options.offset
  *   The id of the message to consider as starting offset for the query.
  *   If the offset is not specified the server will use the id of the most
  *   recent message.
  *
- * @param {integer} options.limit
+ * @param {Integer} options.limit
  *   How many messages at most will be received by the call. The server may
  *   choose to send a lower count if that value exceeds the maximum allowed or
  *   if there are less than the requested number of messages available.
@@ -300,7 +300,7 @@ Client.prototype.readRoomMessage = function (roomId, messageId) {
  *   means there is no way to retrieve the entire list of messages in a room
  *   (because that could potentially be millions of entries).
  *
- * @param {boolean} options.sticky
+ * @param {Boolean} options.sticky
  *   When set to true only sticky messages will be returned in the result
  *   list.
  *   When set to false only non-sticky messages will be returned in the
@@ -319,7 +319,7 @@ Client.prototype.readRoomMessageList = function (roomId, options) {
 /**
  * Retrieves the list of online users.
  *
- * @params {integer} roomId
+ * @params {Integer} roomId
  *   The identifier of the room to fetch participants from.
  *
  * @returns {Promise}
@@ -334,7 +334,7 @@ Client.prototype.readRoomParticipantList = function (roomId) {
 /**
  * Retrieves the list of subscribed users.
  *
- * @params {integer} roomId
+ * @params {Integer} roomId
  *   The identifier of the room to fetch participants from.
  *
  * @returns {Promise}
@@ -361,7 +361,7 @@ Client.prototype.readRoomMemberList = function (roomId) {
 /**
  * Retrieves the list of room announcers.
  *
- * @params {integer} roomId
+ * @params {Integer} roomId
  *   The identifier of the room to fetch room announcers from.
  *
  * @returns {Promise}
@@ -380,7 +380,7 @@ Client.prototype.readSession = function () {
 /**
  * Retrieves a user object with id specified as first argument from the app.
  *
- * @params {integer} userId
+ * @params {Integer} userId
  *   The identifier of the user to fetch.
  *
  * @returns {Promise}
@@ -395,7 +395,7 @@ Client.prototype.readUser = function (userId) {
 /**
  * Retrieves ban status of the user with id specified.
  *
- * @params {integer} userId
+ * @params {Integer} userId
  *   The identifier of the user to fetch.
  *
  * @returns {Promise}
@@ -410,7 +410,7 @@ Client.prototype.readUserBan = function (userId) {
 /**
  * Retrieves the activity information for the specified app.
  *
- * @params {integer} appId
+ * @params {Integer} appId
  *   The identifier of the app to fetch activity information from.
  *
  * @returns {Promise}
@@ -425,7 +425,7 @@ Client.prototype.readAppActivity = function (appId) {
 /**
  * Retrieves the activity information for the specified room.
  *
- * @params {integer} roomId
+ * @params {Integer} roomId
  *   The identifier of the room to fetch activity information from.
  *
  * @returns {Promise}
@@ -438,16 +438,28 @@ Client.prototype.readRoomActivity = function (roomId) {
 }
 
 /**
+ * Retrieves the indexes for the app.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the list of indexes for the app or the
+ *   reject callback will be called with an instance of {Error}.
+ */
+Client.prototype.readIndexList = function () {
+  return this.read(['indexes'])
+}
+
+/**
  * This method exposes a generic interface for creating objects through the Frankly API.
  * Every create* method is implemented on top of this one.
  *
- * @param {string} path
+ * @param {String} path
  *   A path to the collection where a new resource will be created.
  *
- * @param {object} params
+ * @param {Object} params
  *   Parameters passed as part of the request.
  *
- * @param {object} payload
+ * @param {Object} payload
  *   Payload passed as part of the request.
  *
  * @returns {Promise}
@@ -463,14 +475,14 @@ Client.prototype.create = function (path, params, payload) {
 /**
  * Creates a new announcement object in the app.
  *
- * @param {object} options
+ * @param {Object} options
  *   The properties of the the announcement to be created.
  *
  * @param {Array} options.contents
  *   A list of content objects representing what will be embedded into the messages
  *   once the announcement is published to one or more rooms.
  *
- * @param {boolean} options.sticky
+ * @param {Boolean} options.sticky
  *   Whether the announcement should be published as a sticky or regular messages.
  *
  * @returns {Promise}
@@ -491,28 +503,28 @@ Client.prototype.createAnnouncement = function (options) {
  * Creates a new room object in the app and return that object.
  * The properties of that new room are given an object to the method.
  *
- * @param {object} options
+ * @param {Object} options
  *   The properties to set on the newly created room.
  *
- * @param {string} options.title
+ * @param {String} options.title
  *   The title associated to this room.
  *
- * @param {string} options.status
+ * @param {String} options.status
  *   One of 'unpublished', 'active' or 'inactive'.
  *
- * @param {string} options.description
+ * @param {String} options.description
  *   A description of what this chat room is intended for, it is usually a short
  *   description of topics that are discussed by participants.
  *
- * @param {string} options.avatarImageUrl
+ * @param {String} options.avatarImageUrl
  *   The URL of an image to use when the room is displayed in one of the mobile
  *   or web apps embedding a Frankly SDK.
  *
- * @param {string} options.featuredImageUrl
+ * @param {String} options.featuredImageUrl
  *   The URL of an image to use when the room is featured in one of the mobile
  *   or web apps embedding a Frankly SDK.
  *
- * @param {boolean} options.featured
+ * @param {Boolean} options.featured
  *   Whether the room should be featured in the mobile or web apps embedding a Frankly SDK.
  *
  * @returns {Promise}
@@ -530,17 +542,17 @@ Client.prototype.createRoom = function (options) {
  * <br/>
  * The properties of that new message are given as an object to the method.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room to create a message in.
  *
- * @param {object} options
+ * @param {Object} options
  *   The properties to set on the newly created message.
  *
  * @param {Array} [options.contents]
  *   A list of content objects representing what will be embedded into the messages
  *   once the announcement is published to one or more rooms.
  *
- * @param {integer} [options.announcement]
+ * @param {Integer} [options.announcement]
  *   The identifier of the announcement object created via createAnnouncement.
  *
  * @returns {Promise}
@@ -569,10 +581,10 @@ Client.prototype.createRoomMessage = function (roomId, options) {
 /**
  * Flags a message identified by the pair of a room and message id.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room which the flagged message belong to.
  *
- * @param {integer} messageId
+ * @param {Integer} messageId
  *   The identifier of the message to flag.
  *
  * @returns {Promise}
@@ -606,10 +618,10 @@ Client.prototype.createRoomListener = function (roomId, userId) {
  * Adds a user as a participant of a room. If the call is successful the client
  * will start receiving pushes for real-time signals on that room.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room which the user will receive signals from.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  *   The identifier of the user to set as participant.
  *
  * @returns {Promise}
@@ -626,10 +638,10 @@ Client.prototype.createRoomParticipant = function (roomId, userId) {
  * Adds a user as a subscriber of a room. If the call is successful the client
  * will start receiving pushes for real-time signals on that room.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room which the user will receive signals from.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  *   The identifier of the user to set as subscriber.
  *
  * @returns {Promise}
@@ -658,16 +670,16 @@ Client.prototype.createRoomMember = function (roomId, userId) {
  * Adds a user as an announcer of a room. User will be able to
  * send sticky messages within that room
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room which the user will be an announcer of.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  *   The identifier of the user to set as an announcer.
  *
- *  @param {object} options
+ *  @param {Object} options
  *  The properties to set on the newly created room announcer.
  *
- *  @param {object} options.notes
+ *  @param {Object} options.notes
  *  The notes to be recorded for the room announcer.
  *
  * @returns {Promise}
@@ -688,14 +700,14 @@ Client.prototype.createUser = function (options) {
  * Creates a new file object on Frankly servers and returns that object.
  * The properties of that new file are given as keyword arguments to the method.
  *
- * @param {object} options
+ * @param {Object} options
  *   The properties to set on the newly created file.
  *
- * @param {string} options.category
+ * @param {String} options.category
  *   One of the file categories supported by the API (see the *File* section of
  *   the documentation).
  *
- * @param {string} options.type
+ * @param {String} options.type
  *   One of the file types supported by the API (see the *File* section of the
  *   documentation).
  *
@@ -710,16 +722,117 @@ Client.prototype.createFile = function (options) {
 }
 
 /**
+ * Creates a new index on Frankly servers and returns that object.
+ *
+ * @param {Object} options
+ *   The properties to set on the newly created index.
+ *
+ * @param {String} options.items
+ *   A new set of items (generally rooms or selectors) to assign for the index object.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   array representing the newly created indexes or the reject callback
+ *   will be called with an instance of {Error}.
+ *
+ */
+Client.prototype.createIndex = function (options) {
+  return this.create(['indexes'], undefined, options)
+}
+
+/**
+ * Creates a new index on Frankly servers if none exist, otherwise updates existing index with given items,
+ * and returns the list of indexes for the app.
+ *
+ * @param {Object} options
+ *   The properties to set on the newly created file.
+ *
+ * @param {String} options.items
+ *   A new set of items (generally rooms or selectors) to assign for the index object.
+ *
+ * @param {String} options.indexPosition
+ *   The index of the Index object that is to be updated. If left blank, the first Index object will be updated.
+ *
+ * @param {String} options.itemInsertPosition
+ *   The index at which the list of items should be inserted (if Index object exists). If left blank, items will
+ *   be appended to the end of the existing item list.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   array representing the Indexes for the app or the reject callback
+ *   will be called with an instance of {Error}.
+ *
+ */
+Client.prototype.createOrUpdateMainIndex = function (options) {
+  var self = this;
+
+  options || (options = {})
+
+  self.readIndexList()
+      .then(function(indexes){
+        var currentIndexItems,
+            mainIndex;
+
+        if (indexes.length === 0){
+          // When no index exists, one must be created
+
+          return self.readRoomList()
+              .then(function(roomList){
+                var activeRooms =
+                    roomList.filter(function(room){
+                      return room.status === "active"
+                    })
+                    .map(function(room){
+                      return {
+                        featured: Boolean(room.featured),
+                        featuredImageUrl: room.featuredImageUrl || "",
+                        target: {
+                          id: room.id,
+                          type: 'room'
+                        }
+                      }
+                    })
+
+                return self.createIndex({items: activeRooms.concat(options.items || [])})
+              })
+        } else {
+          // When an index already exists, it needs to be updated
+
+          // Find the appropriate index to update (if there are multiple indexes)
+          if (options.indexPosition && options.indexPosition > 0 && options.indexPosition < indexes.length) {
+            mainIndex = indexes[options.indexPosition]
+          } else {
+            mainIndex = indexes[0]
+          }
+
+          currentIndexItems = mainIndex.items
+
+          if (typeof options.itemInsertPosition === "number") {
+            // Add the new items at the given insert position
+            return self.updateIndex(mainIndex.id, {items:
+                Array.prototype.splice.apply(currentIndexItems, [options.itemInsertPosition, 0].concat(options.items || []))
+            })
+          } else {
+            // Add the new items at the end of the items list
+            return self.updateIndex(mainIndex.id, {items: currentIndexItems.concat(options.items || [])})
+          }
+        }
+      })
+
+  return null
+}
+
+/**
  * This method exposes a generic interface for updating objects through the Frankly API.
  * Every update* method is implemented on top of this one.
  *
  * @param {Array} path
  *   The path to the object that will be updated.
  *
- * @param {object} params
+ * @param {Object} params
  *   Parameters passed as part of the request.
  *
- * @param {object} payload
+ * @param {Object} payload
  *   Payload passed as part of the request.
  *
  * @returns {Promise}
@@ -736,10 +849,10 @@ Client.prototype.update = function (path, params, payload) {
  * Updates a room object. This call supports partial updates, allowing any
  * number of properties of the room object to be updated at a time.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier to the room object that will be updated.
  *
- * @param {object} options
+ * @param {Object} options
  *   The set of properties to update on the room.
  *
  * @returns {Promise}
@@ -756,10 +869,10 @@ Client.prototype.updateRoom = function (roomId, options) {
  * Updates a user object. This call supports partial updates, allowing any
  * number of properties of the user object to be updated at a time.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  *   The identifier to the user object that will be updated.
  *
- * @param {object} options
+ * @param {Object} options
  *   The set of properties to update on the room.
  *
  * @returns {Promise}
@@ -775,7 +888,7 @@ Client.prototype.updateUser = function (userId, options) {
 /**
  * Updates the content of a file object hosted on Frankly servers.
  *
- * @param {string} url
+ * @param {String} url
  *   The properties to set on the newly created message.
  *
  * @param {Buffer | ArrayBuffer | Blob} file
@@ -806,13 +919,13 @@ Client.prototype.updateFile = function (url, file) {
  * Updates a room announcer aboject. This call supports partial updates, allowing any
  * number of properties of the room object to be updated at a time.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier to the room that the user is an announcer of.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  * The identifier to the user that is an announcer.
  *
- * @param {object} options
+ * @param {Object} options
  *   The set of properties to update on the room announcer object.
  *
  * @returns {Promise}
@@ -826,16 +939,38 @@ Client.prototype.updateRoomAnnouncer = function (roomId, userId, options) {
 }
 
 /**
+ * Updates a specific index for the app.
+ *
+ * @param {Integer} indexId
+ *   The identifier to the index that is being updated.
+ *
+ * @param {Object} options
+ *   The set of properties to update on the index object.
+ *
+ * @param {array} options.items
+ *   A new set of items to assign for the index object.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the updated index object or the reject callback
+ *   will be called with an instance of {Error}.
+ *
+ */
+Client.prototype.updateIndex = function (indexId, options) {
+  return this.update(['indexes', indexId], undefined, options)
+}
+
+/**
  * This method exposes a generic interface for deleting objects through the Frankly API.
  * Every delete* method is implemented on top of this one.
  *
  * @param {Array} path
  *   The path to the object that will be deleted.
  *
- * @param {object} params
+ * @param {Object} params
  *   Parameters passed as part of the request.
  *
- * @param {object} payload
+ * @param {Object} payload
  *   Payload passed as part of the request.
  *
  * @returns {Promise}
@@ -858,7 +993,7 @@ Client.prototype.del = function (path, params, payload) {
  *
  * This operation cannot be undone!
  *
- * @param {integer} announcementId
+ * @param {Integer} announcementId
  *   The identifier of the announcement to delete.
  *
  * @returns {Promise}
@@ -881,7 +1016,7 @@ Client.prototype.deleteAnnouncement = function (announcementId) {
  *
  * This operation cannot be undone!
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room to delete.
  *
  * @returns {Promise}
@@ -914,10 +1049,10 @@ Client.prototype.deleteRoomListener = function (roomId, userId) {
 /**
  * Deletes a participant from a room.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room where a participant will be removed.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  *   The identifier of the user to remove as a participant.
  *
  * @returns {Promise}
@@ -932,10 +1067,10 @@ Client.prototype.deleteRoomParticipant = function (roomId, userId) {
 /**
  * Deletes a subscriber from a room.
  *
- * @param {integer} roomId
+ * @param {Integer} roomId
  *   The identifier of the room where a subscriber will be removed.
  *
- * @param {integer} userId
+ * @param {Integer} userId
  *   The identifier of the user to remove as a subscriber.
  *
  * @returns {Promise}
@@ -986,12 +1121,12 @@ module.exports = Client
  *   callback to a function that would generated an identity token like
  *   {@link frankly.generateIdentityToken}.
  *
- * @param {string} args.appKey
+ * @param {String} args.appKey
  *   When two or more arguments are specified the first one is the key that
  *   specifies which app this client is authenticating for, this value is
  *   provided by the Frankly Console.
  *
- * @param {string} args.appSecret
+ * @param {String} args.appSecret
  *   The secret value associated the the key allowing the client to securely
  *   authenticate against the Frankly API.
  *
@@ -1029,7 +1164,7 @@ module.exports = Client
  * against the Frankly API.
  *
  * @event Client#authenticate
- * @type {object}
+ * @type {Object}
  */
 
 /**
@@ -1045,12 +1180,12 @@ module.exports = Client
  * Frankly server it had previously established a connection to.
  *
  * @event Client#disconnect
- * @type {object}
+ * @type {Object}
  *
- * @property {integer} code
+ * @property {Integer} code
  *   The code explaining the cause of the disconnection.
  *
- * @property {string} reason
+ * @property {String} reason
  *   A human-readable explanation of what caused the disconnection.
  */
 
@@ -1058,8 +1193,8 @@ module.exports = Client
  * Object fetching event, fired when the client fetches an object through the Frankly API.
  *
  * @event Client#read
- * @type {object}
- * @property {string} type
+ * @type {Object}
+ * @property {String} type
  *   The event type which represent what kind of data is carried.
  */
 
@@ -1067,8 +1202,8 @@ module.exports = Client
  * Object creation event, fired when the client creates an object throught the Frankly API.
  *
  * @event Client#create
- * @type {object}
- * @property {string} type
+ * @type {Object}
+ * @property {String} type
  *   The event type which represent what kind of data is carried.
  */
 
@@ -1077,8 +1212,8 @@ module.exports = Client
  * by an external action on an object the client is listening (message sends for example).
  *
  * @event Client#update
- * @type {object}
- * @property {string} type
+ * @type {Object}
+ * @property {String} type
  *   The event type which represent what kind of data is carried.
  */
 
@@ -1087,8 +1222,8 @@ module.exports = Client
  * deleted by an external action (participants leaving a room for example).
  *
  * @event Client#delete
- * @type {object}
- * @property {string} type
+ * @type {Object}
+ * @property {String} type
  *   The event type which represent what kind of data is carried.
  */
 
@@ -1104,7 +1239,7 @@ module.exports = Client
  * Close event, fired when the {@link Client#close} method is called.
  *
  * @event Client#close
- * @type {boolean}
- * @property {boolean} hasError
+ * @type {Boolean}
+ * @property {Boolean} hasError
  *   Set to true if the client was closed due to an error.
  */
