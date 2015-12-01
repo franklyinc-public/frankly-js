@@ -747,8 +747,12 @@ Client.prototype.createIndex = function (options) {
  * @param {Object} options
  *   The properties to set on the newly created file.
  *
- * @param {String} options.items
- *   A new set of items (generally rooms or selectors) to assign for the index object.
+ * @param {String} options.addItems
+ *   An array of items (generally rooms or selectors) to assign for the index object.
+ *
+ * @param {String} options.removeItems
+ *   An array of items (generally rooms or selectors) to be removed from the main index object. Of the form:
+ *   [{id: x}, {id: y}, {id: z}], where x, y and z are id's of items to be removed from the index.
  *
  * @param {String} options.indexPosition
  *   The index of the Index object that is to be updated. If left blank, the first Index object will be updated.
@@ -770,53 +774,65 @@ Client.prototype.createOrUpdateMainIndex = function (options) {
 
   self.readIndexList()
       .then(function(indexes){
-        var currentIndexItems,
+        var shouldCreateNewIndex = (indexes.length === 0), // When no index exists, one must be created
+            currentIndexItems,
             mainIndex;
-
-        if (indexes.length === 0){
-          // When no index exists, one must be created
 
           return self.readRoomList()
               .then(function(roomList){
-                var activeRooms =
-                    roomList.filter(function(room){
-                      return room.status === "active"
-                    })
-                    .map(function(room){
-                      return {
-                        featured: Boolean(room.featured),
-                        featuredImageUrl: room.featuredImageUrl || "",
-                        target: {
-                          id: room.id,
-                          type: 'room'
+                if (shouldCreateNewIndex) {
+                  currentIndexItems =
+                      roomList.filter(function(room){
+                        return room.status === "active"
+                      })
+                      .map(function(room){
+                        return {
+                          featured: Boolean(room.featured),
+                          featuredImageUrl: room.featuredImageUrl || "",
+                          target: {
+                            id: room.id,
+                            type: 'room'
+                          }
                         }
-                      }
+                      })
+                } else {
+                  // When an index already exists, it needs to be updated
+                  // Find the appropriate index to update (if there are multiple indexes)
+                  if (options.indexPosition && options.indexPosition > 0 && options.indexPosition < indexes.length) {
+                    mainIndex = indexes[options.indexPosition]
+                  } else {
+                    mainIndex = indexes[0]
+                  }
+
+                  if (!shouldCreateNewIndex) {
+                    currentIndexItems = mainIndex.items
+                  }
+                }
+
+                // Items  to be added
+                if (typeof options.itemInsertPosition === "number") {
+                  currentIndexItems = Array.prototype.splice.apply(currentIndexItems, [options.itemInsertPosition, 0].concat(options.addItems || []))
+                } else {
+                  currentIndexItems = currentIndexItems.concat(options.addItems || [])
+                }
+
+                // Items to be removed
+                if (Boolean(options.removeItems) && options.removeItems.length > 0) {
+                  currentIndexItems = currentIndexItems.filter(function(item){
+                    return options.removeItems.map(function(removeItem){
+                      return removeItem.id
                     })
+                    .indexOf(item.target.id) === -1})
+                }
 
-                return self.createIndex({items: activeRooms.concat(options.items || [])})
+                if (shouldCreateNewIndex) {
+                  return self.createIndex({items: currentIndexItems})
+                } else {
+                  return self.updateIndex(mainIndex.id, {items: currentIndexItems})
+                }
+
               })
-        } else {
-          // When an index already exists, it needs to be updated
 
-          // Find the appropriate index to update (if there are multiple indexes)
-          if (options.indexPosition && options.indexPosition > 0 && options.indexPosition < indexes.length) {
-            mainIndex = indexes[options.indexPosition]
-          } else {
-            mainIndex = indexes[0]
-          }
-
-          currentIndexItems = mainIndex.items
-
-          if (typeof options.itemInsertPosition === "number") {
-            // Add the new items at the given insert position
-            return self.updateIndex(mainIndex.id, {items:
-                Array.prototype.splice.apply(currentIndexItems, [options.itemInsertPosition, 0].concat(options.items || []))
-            })
-          } else {
-            // Add the new items at the end of the items list
-            return self.updateIndex(mainIndex.id, {items: currentIndexItems.concat(options.items || [])})
-          }
-        }
       })
 
   return null
