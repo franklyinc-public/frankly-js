@@ -450,6 +450,18 @@ Client.prototype.readIndexList = function () {
 }
 
 /**
+ * Retrieves the indexes for the app.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive an
+ *   object representing the list of indexes for the app or the
+ *   reject callback will be called with an instance of {Error}.
+ */
+Client.prototype.readIndex = function (indexId) {
+  return this.read(['indexes', indexId])
+}
+
+/**
  * This method exposes a generic interface for creating objects through the Frankly API.
  * Every create* method is implemented on top of this one.
  *
@@ -772,7 +784,7 @@ Client.prototype.createOrUpdateMainIndex = function (options) {
 
   options || (options = {})
 
-  self.readIndexList()
+  return self.readIndexList()
       .then(function(indexes){
         var shouldCreateNewIndex = (indexes.length === 0), // When no index exists, one must be created
             currentIndexItems,
@@ -834,8 +846,6 @@ Client.prototype.createOrUpdateMainIndex = function (options) {
               })
 
       })
-
-  return null
 }
 
 /**
@@ -1120,6 +1130,21 @@ Client.prototype.deleteSession = function () {
 
 Client.prototype.deleteUser = function (userId) {
   return this.del(['users', userId])
+}
+
+/**
+ * Deletes a specific index for the app.
+ *
+ * @param {Integer} indexId
+ *   The identifier to the index that is being deleted.
+ *
+ * @returns {Promise}
+ *   The method returns a Promise where the resolve callback will receive a null
+ *   object for success or the reject callback will be called with an instance of {Error}.
+ *
+ */
+Client.prototype.deleteIndex = function (indexId) {
+  return this.del(['indexes', indexId], undefined, undefined)
 }
 
 module.exports = Client
